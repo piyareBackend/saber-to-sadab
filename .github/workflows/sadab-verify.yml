@@ -1,0 +1,48 @@
+name: Sadab verification
+on:
+  push:
+    branches: [feature/sadab-custom-suite]
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: "./.github/shared_workflows/install_apt_dependencies"
+      - name: Setup Flutter
+        uses: adil192/setup-flutter-submodule@v3
+        with:
+          flutter-path: submodules/flutter
+          no-save-caches: true
+      - name: Apply final UI fixes
+        run: |
+          python3 -c "from pathlib import Path; p=Path('lib/components/canvas/inner_canvas.dart'); s=p.read_text(); s=s.replace(\"import 'package:sadab/components/canvas/image/editor_image.dart';\\n\", \"import 'package:sadab/components/canvas/image/editor_image.dart';\\nimport 'package:sadab/components/canvas/paper_grain.dart';\\n\", 1); s=s.replace(\"final Color backgroundColor =\\n        widget.coreInfo.backgroundColor ?? InnerCanvas.defaultBackgroundColor;\", \"final Color backgroundColor = stows.sadabEInkMode.value ? sadabPaperColor(stows.sadabPaperPreset.value) : (widget.coreInfo.backgroundColor ?? InnerCanvas.defaultBackgroundColor);\", 1); s=s.replace(\"              children: [\\n                if (page.backgroundImage != null)\", \"              children: [\\n                if (stows.sadabEInkMode.value && page.backgroundImage == null) const Positioned.fill(child: PaperGrain()),\\n                if (page.backgroundImage != null)\", 1); p.write_text(s)"
+          python3 -c "from pathlib import Path; p=Path('lib/components/canvas/canvas_image.dart'); s=p.read_text(); s=s.replace(\"import 'package:sadab/components/canvas/canvas_image_dialog.dart';\\n\", \"import 'package:sadab/components/canvas/canvas_image_dialog.dart';\\nimport 'package:sadab/components/canvas/grayscale_widget.dart';\\n\", 1); old=\"child: widget.image.buildImageWidget(\\n                          context: context,\\n                          overrideBoxFit: widget.overrideBoxFit,\\n                          isBackground: widget.isBackground,\\n                          invert: imageBrightness == .dark,\\n                        ),\"; new=\"child: stows.sadabEInkMode.value ? GrayscaleWidget(child: widget.image.buildImageWidget(context: context, overrideBoxFit: widget.overrideBoxFit, isBackground: widget.isBackground, invert: false)) : widget.image.buildImageWidget(context: context, overrideBoxFit: widget.overrideBoxFit, isBackground: widget.isBackground, invert: imageBrightness == .dark),\"; s=s.replace(old,new,1); s=s.replace('import \\'package:sadab/components/canvas/grayscale_widget.dart\\';\\nimport \\'package:sadab/components/canvas/grayscale_widget.dart\\';\\n','import \\'package:sadab/components/canvas/grayscale_widget.dart\\';\\n'); p.write_text(s)"
+          python3 -c "from pathlib import Path; p=Path('android/app/src/main/AndroidManifest.xml'); s=p.read_text().replace('android:label=\"Saber\"','android:label=\"Sadab\"',1); p.write_text(s)"
+          python3 -c "from pathlib import Path; p=Path('lib/pages/editor/editor.dart'); s=p.read_text(); old=\"        children: [\\n          Expanded(child: canvas),\\n          toolbar,\\n          readonlyBanner,\\n        ],\"; new=\"        children: [\\n          toolbar,\\n          Expanded(child: canvas),\\n          readonlyBanner,\\n        ],\"; s=s.replace(old,new,1); p.write_text(s)"
+      - name: Commit final UI fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/components/canvas/inner_canvas.dart lib/components/canvas/canvas_image.dart android/app/src/main/AndroidManifest.xml lib/pages/editor/editor.dart
+          git diff --cached --quiet || git commit -m "fix(sadab): complete tablet paper and toolbar integration"
+          git push origin HEAD:feature/sadab-custom-suite
+      - name: Flutter pub get
+        run: flutter pub get
+      - name: Flutter analyze
+        run: flutter analyze lib
+      - name: Build APK
+        run: flutter build apk
+      - name: Remove verification workflow
+        if: success()
+        run: |
+          git rm -f .github/workflows/sadab-verify.yml || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(sadab): remove temporary verification workflow"
+          git push origin HEAD:feature/sadab-custom-suite
