@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saber/data/file_manager/file_manager.dart';
-import 'package:saber/data/flavor_config.dart';
-import 'package:saber/data/nextcloud/nextcloud_client_extension.dart';
-import 'package:saber/data/nextcloud/saber_syncer.dart';
-import 'package:saber/data/prefs.dart';
+import 'package:sadab/data/file_manager/file_manager.dart';
+import 'package:sadab/data/flavor_config.dart';
+import 'package:sadab/data/nextcloud/nextcloud_client_extension.dart';
+import 'package:sadab/data/nextcloud/saber_syncer.dart';
+import 'package:sadab/data/prefs.dart';
 
 import 'utils/test_mock_channel_handlers.dart';
 import 'utils/test_random.dart';
@@ -35,17 +35,14 @@ void main() async {
     printOnFailure(syncFile.toString());
     expect(syncFile.remotePath, matches(RegExp(r'^Saber/[a-zA-Z0-9]+\.sbe$')));
 
-    // Create local file
     const content = 'Hello, world!';
     await localFile.create(recursive: true);
     await localFile.writeAsString(content);
 
-    // Upload
     final upBytes = await syncer.interface.readLocalFile(syncFile);
     expect(upBytes, isNotEmpty);
     await syncer.interface.uploadRemoteFile(syncFile, upBytes);
 
-    // Get the sync file again, this time starting with the remote file
     final remoteFile = await syncer.interface.getWebDavFile(
       syncFile.remotePath,
     );
@@ -55,7 +52,6 @@ void main() async {
     );
     expect(syncFile2, equals(syncFile));
 
-    // Download
     final downBytes = await syncer.interface.downloadRemoteFile(syncFile);
     expect(downBytes, isNotEmpty);
     expect(downBytes, equals(upBytes));
