@@ -1,5 +1,5 @@
-name: saber
-description: A cross-platform libre notes app
+name: sadab
+description: A distraction-free study and reading app
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

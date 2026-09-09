@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:saber/components/theming/adaptive_toggle_buttons.dart';
-import 'package:saber/components/theming/uni_icon.dart';
-import 'package:saber/pages/home/settings.dart';
+import 'package:sadab/components/theming/adaptive_toggle_buttons.dart';
+import 'package:sadab/components/theming/uni_icon.dart';
+import 'package:sadab/pages/home/settings.dart';
 import 'package:stow/stow.dart';
 import 'package:yaru/yaru.dart';
 

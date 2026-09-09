@@ -1,0 +1,23 @@
+Package: linux-entra-sso
+Priority: extra
+Section: multiverse/web
+Installed-Size: 40
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Version: 1.8.0-1~bpo24.04.1
+Suggests: chromium | chromium-browser, firefox | firefox-esr
+Depends: python3, python3-gi, python3-pydbus
+Enhances: chromium, chromium-browser, firefox, firefox-esr
+Filename: pool/multiverse/l/linux-entra-sso/linux-entra-sso_1.8.0-1~bpo24.04.1_all.deb
+Size: 7012
+MD5sum: 404119e8b223a10c341ea47820b5bb69
+SHA1: 6b32974b7536ca6dc021fb833a34449cd31b6ad8
+SHA256: bbc015f953b719a0563704149df9298c4d9250e606a386856fb6745d9576fc67
+SHA512: 7f4907eca7549fde6b7fcfbd0dc2733eec9c406e6fe79d39cbd1662b28784a391d2db8e4e43ad2009756bb08d3aacac743fbd014f194d415606927bdcd8c0e22
+Homepage: https://github.com/siemens/linux-entra-sso
+Description: Entra ID SSO via Himmelblau or Microsoft Identity Broker on Linux
+Description-md5: 98296b2b88abbe7ae623e6aceb4f86fa
+Original-Maintainer: Luca Boccassi <bluca@debian.org>
+Origin: Ubuntu
+Bugs: https://bugs.launchpad.net/ubuntu/+filebug
+

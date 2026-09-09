@@ -14,41 +14,42 @@ import 'package:keybinder/keybinder.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdfrx/pdfrx.dart';
-import 'package:saber/components/canvas/_asset_cache.dart';
-import 'package:saber/components/canvas/_stroke.dart';
-import 'package:saber/components/canvas/canvas.dart';
-import 'package:saber/components/canvas/canvas_gesture_detector.dart';
-import 'package:saber/components/canvas/canvas_image.dart';
-import 'package:saber/components/canvas/image/editor_image.dart';
-import 'package:saber/components/canvas/save_indicator.dart';
-import 'package:saber/components/editor/read_only_banner.dart';
-import 'package:saber/components/theming/adaptive_alert_dialog.dart';
-import 'package:saber/components/theming/adaptive_icon.dart';
-import 'package:saber/components/theming/dynamic_material_app.dart';
-import 'package:saber/components/theming/saber_theme.dart';
-import 'package:saber/components/toolbar/color_bar.dart';
-import 'package:saber/components/toolbar/editor_bottom_sheet.dart';
-import 'package:saber/components/toolbar/editor_page_manager.dart';
-import 'package:saber/components/toolbar/toolbar.dart';
-import 'package:saber/data/editor/editor_core_info.dart';
-import 'package:saber/data/editor/editor_exporter.dart';
-import 'package:saber/data/editor/editor_history.dart';
-import 'package:saber/data/editor/page.dart';
-import 'package:saber/data/extensions/change_notifier_extensions.dart';
-import 'package:saber/data/extensions/matrix4_extensions.dart';
-import 'package:saber/data/file_manager/file_manager.dart';
-import 'package:saber/data/nextcloud/saber_syncer.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/data/tools/_tool.dart';
-import 'package:saber/data/tools/eraser.dart';
-import 'package:saber/data/tools/highlighter.dart';
-import 'package:saber/data/tools/laser_pointer.dart';
-import 'package:saber/data/tools/pen.dart';
-import 'package:saber/data/tools/pencil.dart';
-import 'package:saber/data/tools/select.dart';
-import 'package:saber/data/tools/shape_pen.dart';
-import 'package:saber/i18n/strings.g.dart';
-import 'package:saber/pages/home/whiteboard.dart';
+import 'package:sadab/components/canvas/_asset_cache.dart';
+import 'package:sadab/components/canvas/_stroke.dart';
+import 'package:sadab/components/canvas/canvas.dart';
+import 'package:sadab/components/canvas/canvas_gesture_detector.dart';
+import 'package:sadab/components/canvas/canvas_image.dart';
+import 'package:sadab/components/canvas/image/editor_image.dart';
+import 'package:sadab/components/canvas/save_indicator.dart';
+import 'package:sadab/components/editor/read_only_banner.dart';
+import 'package:sadab/components/theming/adaptive_alert_dialog.dart';
+import 'package:sadab/components/theming/adaptive_icon.dart';
+import 'package:sadab/components/theming/dynamic_material_app.dart';
+import 'package:sadab/components/toolbar/color_bar.dart';
+import 'package:sadab/components/toolbar/editor_bottom_sheet.dart';
+import 'package:sadab/components/toolbar/editor_page_manager.dart';
+import 'package:sadab/components/shapes/shape_palette_dialog.dart';
+import 'package:sadab/components/toolbar/floating_toolbox.dart';
+import 'package:sadab/components/toolbar/toolbar.dart';
+import 'package:sadab/data/editor/editor_core_info.dart';
+import 'package:sadab/data/editor/editor_exporter.dart';
+import 'package:sadab/data/editor/editor_history.dart';
+import 'package:sadab/data/editor/page.dart';
+import 'package:sadab/data/extensions/change_notifier_extensions.dart';
+import 'package:sadab/data/extensions/matrix4_extensions.dart';
+import 'package:sadab/data/file_manager/file_manager.dart';
+import 'package:sadab/data/nextcloud/saber_syncer.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/data/tools/_tool.dart';
+import 'package:sadab/data/tools/eraser.dart';
+import 'package:sadab/data/tools/highlighter.dart';
+import 'package:sadab/data/tools/laser_pointer.dart';
+import 'package:sadab/data/tools/pen.dart';
+import 'package:sadab/data/tools/pencil.dart';
+import 'package:sadab/data/tools/select.dart';
+import 'package:sadab/data/tools/shape_pen.dart';
+import 'package:sadab/i18n/strings.g.dart';
+import 'package:sadab/pages/home/whiteboard.dart';
 import 'package:sbn/change.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
@@ -1357,10 +1358,28 @@ class EditorState extends State<Editor> {
     }
   }
 
+  void sadabShowShapes() {
+    showDialog(
+      context: context,
+      builder: (_) => ShapePaletteDialog(
+        onSelected: (_) => setState(() => currentTool = ShapePen()),
+      ),
+    );
+  }
+
+  void sadabPenPreset(int preset) {
+    setState(() {
+      currentTool = switch (preset) {
+        1 => Pen.fountainPen(),
+        2 => Pen.ballpointPen(),
+        _ => Pencil.currentPencil,
+      };
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
-    final platform = Theme.of(context).platform;
     final isToolbarVertical =
         stows.editorToolbarAlignment.value == AxisDirection.left ||
         stows.editorToolbarAlignment.value == AxisDirection.right;
@@ -1611,8 +1630,8 @@ class EditorState extends State<Editor> {
             ? VerticalDirection.up
             : VerticalDirection.down,
         children: [
-          Expanded(child: canvas),
           toolbar,
+          Expanded(child: canvas),
           readonlyBanner,
         ],
       );
@@ -1718,7 +1737,16 @@ class EditorState extends State<Editor> {
                 ],
               ),
         body: body,
-        floatingActionButton:
+        floatingActionButton: FloatingToolbox(
+          onPenPreset: sadabPenPreset,
+          onEraser: () => setState(() => currentTool = Eraser()),
+          onUndo: undo,
+          onRedo: redo,
+          onPalmRejection: (v) =>
+              setState(() => stows.editorFingerDrawing.value = v),
+          onShapes: sadabShowShapes,
+        ),
+        /* previous floatingActionButton:
             (DynamicMaterialApp.isFullscreen &&
                 !stows.editorToolbarShowInFullscreen.value)
             ? FloatingActionButton(
@@ -1729,6 +1757,7 @@ class EditorState extends State<Editor> {
                 child: const Icon(Icons.fullscreen_exit),
               )
             : null,
+        */
       ),
     );
   }

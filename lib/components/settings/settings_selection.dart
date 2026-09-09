@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:saber/components/settings/settings_dropdown.dart';
-import 'package:saber/components/theming/adaptive_toggle_buttons.dart';
-import 'package:saber/components/theming/uni_icon.dart';
-import 'package:saber/pages/home/settings.dart';
+import 'package:sadab/components/settings/settings_dropdown.dart';
+import 'package:sadab/components/theming/adaptive_toggle_buttons.dart';
+import 'package:sadab/components/theming/uni_icon.dart';
+import 'package:sadab/pages/home/settings.dart';
 import 'package:stow/stow.dart';
 
 class SettingsSelection<T extends num> extends StatefulWidget {

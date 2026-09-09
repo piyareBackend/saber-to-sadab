@@ -2,15 +2,16 @@ import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:one_dollar_unistroke_recognizer/one_dollar_unistroke_recognizer.dart';
-import 'package:saber/components/canvas/_canvas_background_painter.dart';
-import 'package:saber/components/canvas/_canvas_painter.dart';
-import 'package:saber/components/canvas/_stroke.dart';
-import 'package:saber/components/canvas/canvas_image.dart';
-import 'package:saber/components/canvas/image/editor_image.dart';
-import 'package:saber/data/editor/editor_core_info.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/data/tools/select.dart';
-import 'package:saber/i18n/strings.g.dart';
+import 'package:sadab/components/canvas/_canvas_background_painter.dart';
+import 'package:sadab/components/canvas/_canvas_painter.dart';
+import 'package:sadab/components/canvas/_stroke.dart';
+import 'package:sadab/components/canvas/canvas_image.dart';
+import 'package:sadab/components/canvas/image/editor_image.dart';
+import 'package:sadab/components/canvas/paper_grain.dart';
+import 'package:sadab/data/editor/editor_core_info.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/data/tools/select.dart';
+import 'package:sadab/i18n/strings.g.dart';
 import 'package:sbn/canvas_background_pattern.dart';
 import 'package:sbn/quill_styles.dart';
 
@@ -62,9 +63,14 @@ class _InnerCanvasState extends State<InnerCanvas> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final brightness = theme.brightness;
-    final invert = stows.editorAutoInvert.value && brightness == .dark;
-    final Color backgroundColor =
-        widget.coreInfo.backgroundColor ?? InnerCanvas.defaultBackgroundColor;
+    final invert =
+        stows.editorAutoInvert.value &&
+        brightness == .dark &&
+        !stows.sadabEInkMode.value;
+    final Color backgroundColor = stows.sadabEInkMode.value
+        ? sadabPaperColor(stows.sadabPaperPreset.value)
+        : (widget.coreInfo.backgroundColor ??
+              InnerCanvas.defaultBackgroundColor);
 
     if (widget.coreInfo.pages.isEmpty) {
       return SizedBox(width: widget.width, height: widget.height);
@@ -148,6 +154,8 @@ class _InnerCanvasState extends State<InnerCanvas> {
           child: DeferredPointerHandler(
             child: Stack(
               children: [
+                if (stows.sadabEInkMode.value && page.backgroundImage == null)
+                  const Positioned.fill(child: PaperGrain()),
                 if (page.backgroundImage != null)
                   CanvasImage(
                     filePath: widget.coreInfo.filePath,
