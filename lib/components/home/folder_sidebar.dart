@@ -126,13 +126,6 @@ class FolderSidebar extends StatelessWidget {
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  'Use the folder list for quick navigation and management.',
-                  style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-                ),
-              ),
             ],
           ),
         ),
