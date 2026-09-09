@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:sadab/components/canvas/canvas_image_dialog.dart';
 import 'package:sadab/components/canvas/grayscale_widget.dart';
+import 'package:sadab/components/canvas/grayscale_widget.dart';
 import 'package:sadab/components/canvas/image/editor_image.dart';
 import 'package:sadab/components/theming/adaptive_alert_dialog.dart';
 import 'package:sadab/data/extensions/change_notifier_extensions.dart';
@@ -194,7 +195,21 @@ class _CanvasImageState extends State<CanvasImage> {
                       size: widget.image.srcRect.size,
                       child: Transform.translate(
                         offset: -widget.image.srcRect.topLeft,
-                        child: stows.sadabEInkMode.value ? GrayscaleWidget(child: widget.image.buildImageWidget(context: context, overrideBoxFit: widget.overrideBoxFit, isBackground: widget.isBackground, invert: false)) : widget.image.buildImageWidget(context: context, overrideBoxFit: widget.overrideBoxFit, isBackground: widget.isBackground, invert: imageBrightness == .dark),
+                        child: stows.sadabEInkMode.value
+                            ? GrayscaleWidget(
+                                child: widget.image.buildImageWidget(
+                                  context: context,
+                                  overrideBoxFit: widget.overrideBoxFit,
+                                  isBackground: widget.isBackground,
+                                  invert: false,
+                                ),
+                              )
+                            : widget.image.buildImageWidget(
+                                context: context,
+                                overrideBoxFit: widget.overrideBoxFit,
+                                isBackground: widget.isBackground,
+                                invert: imageBrightness == .dark,
+                              ),
                       ),
                     ),
                   ),

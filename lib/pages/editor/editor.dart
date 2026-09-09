@@ -25,13 +25,12 @@ import 'package:sadab/components/editor/read_only_banner.dart';
 import 'package:sadab/components/theming/adaptive_alert_dialog.dart';
 import 'package:sadab/components/theming/adaptive_icon.dart';
 import 'package:sadab/components/theming/dynamic_material_app.dart';
-import 'package:sadab/components/theming/saber_theme.dart';
 import 'package:sadab/components/toolbar/color_bar.dart';
 import 'package:sadab/components/toolbar/editor_bottom_sheet.dart';
 import 'package:sadab/components/toolbar/editor_page_manager.dart';
-import 'package:sadab/components/toolbar/toolbar.dart';
-import 'package:sadab/components/toolbar/floating_toolbox.dart';
 import 'package:sadab/components/shapes/shape_palette_dialog.dart';
+import 'package:sadab/components/toolbar/floating_toolbox.dart';
+import 'package:sadab/components/toolbar/toolbar.dart';
 import 'package:sadab/data/editor/editor_core_info.dart';
 import 'package:sadab/data/editor/editor_exporter.dart';
 import 'package:sadab/data/editor/editor_history.dart';
@@ -1359,19 +1358,28 @@ class EditorState extends State<Editor> {
     }
   }
 
-
   void sadabShowShapes() {
-    showDialog(context: context, builder: (_) => ShapePaletteDialog(onSelected: (_) => setState(() => currentTool = ShapePen())));
+    showDialog(
+      context: context,
+      builder: (_) => ShapePaletteDialog(
+        onSelected: (_) => setState(() => currentTool = ShapePen()),
+      ),
+    );
   }
 
   void sadabPenPreset(int preset) {
-    setState(() { currentTool = switch (preset) { 1 => Pen.fountainPen(), 2 => Pen.ballpointPen(), _ => Pencil.currentPencil }; });
+    setState(() {
+      currentTool = switch (preset) {
+        1 => Pen.fountainPen(),
+        2 => Pen.ballpointPen(),
+        _ => Pencil.currentPencil,
+      };
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
-    final platform = Theme.of(context).platform;
     final isToolbarVertical =
         stows.editorToolbarAlignment.value == AxisDirection.left ||
         stows.editorToolbarAlignment.value == AxisDirection.right;
@@ -1729,7 +1737,15 @@ class EditorState extends State<Editor> {
                 ],
               ),
         body: body,
-        floatingActionButton: FloatingToolbox(onPenPreset: sadabPenPreset, onEraser: () => setState(() => currentTool = Eraser()), onUndo: undo, onRedo: redo, onPalmRejection: (v) => setState(() => stows.editorFingerDrawing.value = v), onShapes: sadabShowShapes),
+        floatingActionButton: FloatingToolbox(
+          onPenPreset: sadabPenPreset,
+          onEraser: () => setState(() => currentTool = Eraser()),
+          onUndo: undo,
+          onRedo: redo,
+          onPalmRejection: (v) =>
+              setState(() => stows.editorFingerDrawing.value = v),
+          onShapes: sadabShowShapes,
+        ),
         /* previous floatingActionButton:
             (DynamicMaterialApp.isFullscreen &&
                 !stows.editorToolbarShowInFullscreen.value)

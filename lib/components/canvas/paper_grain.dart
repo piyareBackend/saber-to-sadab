@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class PaperGrainPainter extends CustomPainter {
-  const PaperGrainPainter();
-  static final List<Offset> _points = List<Offset>.generate(420, (i) {
+  const new();
+  static final _points = List<Offset>.generate(420, (i) {
     final x = ((i * 73) % 997) / 997.0;
     final y = ((i * 181 + 31) % 991) / 991.0;
     return Offset(x, y);
@@ -12,7 +12,11 @@ class PaperGrainPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = Colors.black.withValues(alpha: 0.022);
     for (final point in _points) {
-      canvas.drawCircle(Offset(point.dx * size.width, point.dy * size.height), 0.45, paint);
+      canvas.drawCircle(
+        Offset(point.dx * size.width, point.dy * size.height),
+        0.45,
+        paint,
+      );
     }
   }
 
@@ -21,7 +25,9 @@ class PaperGrainPainter extends CustomPainter {
 }
 
 class PaperGrain extends StatelessWidget {
-  const PaperGrain({super.key});
+  const new({super.key});
   @override
-  Widget build(BuildContext context) => const IgnorePointer(child: RepaintBoundary(child: CustomPaint(painter: PaperGrainPainter())));
+  Widget build(BuildContext context) => const IgnorePointer(
+    child: RepaintBoundary(child: CustomPaint(painter: PaperGrainPainter())),
+  );
 }
