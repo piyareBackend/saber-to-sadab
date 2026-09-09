@@ -259,7 +259,7 @@ class _BrowsePageState extends State<BrowsePage> {
             )
           : content,
       floatingActionButton: NewNoteButton(
-        cupertino: platform.isCupertino,
+        cupertino: platform == TargetPlatform.iOS || platform == TargetPlatform.macOS,
         path: path,
       ),
       persistentFooterButtons: selectedFiles.value.isEmpty
