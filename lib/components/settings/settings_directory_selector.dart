@@ -6,11 +6,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:saber/components/theming/adaptive_alert_dialog.dart';
-import 'package:saber/data/file_manager/file_manager.dart';
-import 'package:saber/data/nextcloud/saber_syncer.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/i18n/strings.g.dart';
+import 'package:sadab/components/theming/adaptive_alert_dialog.dart';
+import 'package:sadab/data/file_manager/file_manager.dart';
+import 'package:sadab/data/nextcloud/saber_syncer.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/i18n/strings.g.dart';
 import 'package:sbn/font_fallbacks.dart';
 
 class SettingsDirectorySelector extends StatelessWidget {

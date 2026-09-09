@@ -2,9 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:saber/components/navbar/responsive_navbar.dart';
-import 'package:saber/components/theming/saber_theme.dart';
-import 'package:saber/data/routes.dart';
+import 'package:sadab/components/navbar/responsive_navbar.dart';
+import 'package:sadab/components/theming/saber_theme.dart';
+import 'package:sadab/data/routes.dart';
 
 class const HorizontalNavbar({
   super.key,

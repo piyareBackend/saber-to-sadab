@@ -8,11 +8,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
-import 'package:saber/components/theming/saber_theme.dart';
-import 'package:saber/components/theming/yaru_builder.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/i18n/extensions/redirecting_localization_delegate.dart';
-import 'package:saber/i18n/strings.g.dart';
+import 'package:sadab/components/theming/saber_theme.dart';
+import 'package:sadab/components/theming/yaru_builder.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/i18n/extensions/redirecting_localization_delegate.dart';
+import 'package:sadab/i18n/strings.g.dart';
 import 'package:window_manager/window_manager.dart';
 
 class DynamicMaterialApp extends StatefulHookWidget {

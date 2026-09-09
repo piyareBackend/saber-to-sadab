@@ -12,12 +12,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:pdfrx/pdfrx.dart';
-import 'package:saber/components/canvas/_asset_cache.dart';
-import 'package:saber/components/canvas/canvas_image.dart';
-import 'package:saber/components/canvas/invert_widget.dart';
-import 'package:saber/data/file_manager/file_manager.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/pages/editor/editor.dart';
+import 'package:sadab/components/canvas/_asset_cache.dart';
+import 'package:sadab/components/canvas/canvas_image.dart';
+import 'package:sadab/components/canvas/invert_widget.dart';
+import 'package:sadab/data/file_manager/file_manager.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/pages/editor/editor.dart';
 
 part 'png_editor_image.dart';
 part 'pdf_editor_image.dart';

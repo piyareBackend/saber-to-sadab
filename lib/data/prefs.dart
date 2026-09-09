@@ -5,15 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:perfect_freehand/perfect_freehand.dart';
-import 'package:saber/components/home/home_layout_button.dart';
-import 'package:saber/components/home/sort_button.dart';
-import 'package:saber/components/navbar/responsive_navbar.dart';
-import 'package:saber/data/codecs/base64_codec.dart';
-import 'package:saber/data/flavor_config.dart';
-import 'package:saber/data/quota.dart';
-import 'package:saber/data/sentry/sentry_consent.dart';
-import 'package:saber/data/tools/highlighter.dart';
-import 'package:saber/data/tools/pen.dart';
+import 'package:sadab/components/home/home_layout_button.dart';
+import 'package:sadab/components/home/sort_button.dart';
+import 'package:sadab/components/navbar/responsive_navbar.dart';
+import 'package:sadab/data/codecs/base64_codec.dart';
+import 'package:sadab/data/flavor_config.dart';
+import 'package:sadab/data/quota.dart';
+import 'package:sadab/data/sentry/sentry_consent.dart';
+import 'package:sadab/data/tools/highlighter.dart';
+import 'package:sadab/data/tools/pen.dart';
 import 'package:sbn/canvas_background_pattern.dart';
 import 'package:sbn/tool_id.dart';
 import 'package:stow/stow.dart';
@@ -23,6 +23,14 @@ import 'package:stow_secure/stow_secure.dart';
 
 /// If false, all stows are stuck at their default values.
 var _isOnMainIsolate = false;
+
+enum SadabPaperPreset { warmPaper, eInkNeutral, mutedNight }
+
+Color sadabPaperColor(SadabPaperPreset preset) => switch (preset) {
+  SadabPaperPreset.warmPaper => const Color(0xFFF4ECD8),
+  SadabPaperPreset.eInkNeutral => const Color(0xFFE5E0D8),
+  SadabPaperPreset.mutedNight => const Color(0xFF1A1A1A),
+};
 
 final stows = Stows();
 
@@ -44,6 +52,13 @@ class Stows {
   }
 
   final log = Logger('Stows');
+
+  final sadabEInkMode = PlainStow('sadabEInkMode', false, volatile: !_isOnMainIsolate);
+  final sadabHighContrastInk = PlainStow('sadabHighContrastInk', false, volatile: !_isOnMainIsolate);
+  final sadabPaperPreset = PlainStow(
+    'sadabPaperPreset', SadabPaperPreset.eInkNeutral,
+    codec: const EnumCodec(SadabPaperPreset.values), volatile: !_isOnMainIsolate,
+  );
 
   final customDataDir = PlainStow<String?>(
     'customDataDir',

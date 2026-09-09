@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:one_dollar_unistroke_recognizer/one_dollar_unistroke_recognizer.dart';
 import 'package:path_drawing/path_drawing.dart';
 import 'package:perfect_freehand/perfect_freehand.dart';
-import 'package:saber/components/canvas/_circle_stroke.dart';
-import 'package:saber/components/canvas/_rectangle_stroke.dart';
-import 'package:saber/components/canvas/_stroke.dart';
-import 'package:saber/data/editor/page.dart';
-import 'package:saber/data/extensions/color_extensions.dart';
-import 'package:saber/data/tools/highlighter.dart';
-import 'package:saber/data/tools/laser_pointer.dart';
-import 'package:saber/data/tools/select.dart';
-import 'package:saber/data/tools/shape_pen.dart';
+import 'package:sadab/components/canvas/_circle_stroke.dart';
+import 'package:sadab/components/canvas/_rectangle_stroke.dart';
+import 'package:sadab/components/canvas/_stroke.dart';
+import 'package:sadab/data/editor/page.dart';
+import 'package:sadab/data/extensions/color_extensions.dart';
+import 'package:sadab/data/tools/highlighter.dart';
+import 'package:sadab/data/tools/laser_pointer.dart';
+import 'package:sadab/data/tools/select.dart';
+import 'package:sadab/data/tools/shape_pen.dart';
 
 class CanvasPainter extends CustomPainter {
   const new({

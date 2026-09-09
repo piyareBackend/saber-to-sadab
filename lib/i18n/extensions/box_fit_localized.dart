@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:saber/i18n/strings.g.dart';
+import 'package:sadab/i18n/strings.g.dart';
 
 extension BoxFitLocalized on BoxFit {
   String get localizedName {

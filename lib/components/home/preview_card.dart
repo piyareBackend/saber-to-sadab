@@ -2,17 +2,17 @@ import 'dart:async';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
-import 'package:saber/components/canvas/_stroke.dart';
-import 'package:saber/components/canvas/inner_canvas.dart';
-import 'package:saber/components/canvas/invert_widget.dart';
-import 'package:saber/components/home/sync_indicator.dart';
-import 'package:saber/data/extensions/color_extensions.dart';
-import 'package:saber/data/file_manager/file_manager.dart';
-import 'package:saber/data/is_this_a_test.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/data/routes.dart';
-import 'package:saber/i18n/strings.g.dart';
-import 'package:saber/pages/editor/editor.dart';
+import 'package:sadab/components/canvas/_stroke.dart';
+import 'package:sadab/components/canvas/inner_canvas.dart';
+import 'package:sadab/components/canvas/invert_widget.dart';
+import 'package:sadab/components/home/sync_indicator.dart';
+import 'package:sadab/data/extensions/color_extensions.dart';
+import 'package:sadab/data/file_manager/file_manager.dart';
+import 'package:sadab/data/is_this_a_test.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/data/routes.dart';
+import 'package:sadab/i18n/strings.g.dart';
+import 'package:sadab/pages/editor/editor.dart';
 import 'package:yaru/yaru.dart';
 
 class PreviewCard extends StatefulWidget {

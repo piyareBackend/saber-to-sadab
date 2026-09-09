@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:saber/components/canvas/hud/canvas_gesture_lock_btn.dart';
-import 'package:saber/components/canvas/hud/canvas_zoom_indicator.dart';
-import 'package:saber/data/extensions/matrix4_extensions.dart';
-import 'package:saber/i18n/strings.g.dart';
+import 'package:sadab/components/canvas/hud/canvas_gesture_lock_btn.dart';
+import 'package:sadab/components/canvas/hud/canvas_zoom_indicator.dart';
+import 'package:sadab/data/extensions/matrix4_extensions.dart';
+import 'package:sadab/i18n/strings.g.dart';
 
 class CanvasHud extends HookWidget {
   const new({

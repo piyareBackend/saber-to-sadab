@@ -14,21 +14,21 @@ import 'package:path/path.dart' as p;
 import 'package:path_to_regexp/path_to_regexp.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:printing/printing.dart';
-import 'package:saber/components/canvas/pencil_shader.dart';
-import 'package:saber/components/theming/dynamic_material_app.dart';
-import 'package:saber/data/file_manager/file_manager.dart';
-import 'package:saber/data/flavor_config.dart';
-import 'package:saber/data/nextcloud/nc_http_overrides.dart';
-import 'package:saber/data/nextcloud/saber_syncer.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/data/routes.dart';
-import 'package:saber/data/sentry/sentry_init.dart';
-import 'package:saber/data/tools/stroke_properties.dart';
-import 'package:saber/i18n/strings.g.dart';
-import 'package:saber/pages/editor/editor.dart';
-import 'package:saber/pages/home/home.dart';
-import 'package:saber/pages/logs.dart';
-import 'package:saber/pages/user/login.dart';
+import 'package:sadab/components/canvas/pencil_shader.dart';
+import 'package:sadab/components/theming/dynamic_material_app.dart';
+import 'package:sadab/data/file_manager/file_manager.dart';
+import 'package:sadab/data/flavor_config.dart';
+import 'package:sadab/data/nextcloud/nc_http_overrides.dart';
+import 'package:sadab/data/nextcloud/saber_syncer.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/data/routes.dart';
+import 'package:sadab/data/sentry/sentry_init.dart';
+import 'package:sadab/data/tools/stroke_properties.dart';
+import 'package:sadab/i18n/strings.g.dart';
+import 'package:sadab/pages/editor/editor.dart';
+import 'package:sadab/pages/home/home.dart';
+import 'package:sadab/pages/logs.dart';
+import 'package:sadab/pages/user/login.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:worker_manager/worker_manager.dart';
 import 'package:workmanager/workmanager.dart';
@@ -335,7 +335,7 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    return DynamicMaterialApp(title: 'Saber', router: App._router);
+    return DynamicMaterialApp(title: 'Sadab', router: App._router);
   }
 
   @override

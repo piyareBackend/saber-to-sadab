@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:one_dollar_unistroke_recognizer/one_dollar_unistroke_recognizer.dart';
 import 'package:onyxsdk_pen/onyxsdk_pen.dart';
-import 'package:saber/components/canvas/_stroke.dart';
-import 'package:saber/components/canvas/image/editor_image.dart';
-import 'package:saber/components/canvas/inner_canvas.dart';
-import 'package:saber/data/editor/editor_core_info.dart';
-import 'package:saber/data/editor/page.dart';
-import 'package:saber/data/tools/_tool.dart';
-import 'package:saber/data/tools/pen.dart';
-import 'package:saber/data/tools/select.dart';
+import 'package:sadab/components/canvas/_stroke.dart';
+import 'package:sadab/components/canvas/image/editor_image.dart';
+import 'package:sadab/components/canvas/inner_canvas.dart';
+import 'package:sadab/data/editor/editor_core_info.dart';
+import 'package:sadab/data/editor/page.dart';
+import 'package:sadab/data/tools/_tool.dart';
+import 'package:sadab/data/tools/pen.dart';
+import 'package:sadab/data/tools/select.dart';
+import 'package:sadab/data/prefs.dart';
 import 'package:sbn/tool_id.dart';
 
 class Canvas extends StatelessWidget {
@@ -69,6 +70,7 @@ class Canvas extends StatelessWidget {
   }
 
   Color _getOnyxColor() {
+    if (stows.sadabHighContrastInk.value) return Colors.black;
     if (currentTool is Pen) {
       return (currentTool as Pen).color;
     } else {

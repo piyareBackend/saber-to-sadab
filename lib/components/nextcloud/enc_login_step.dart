@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logging/logging.dart';
-import 'package:saber/components/misc/faq.dart';
-import 'package:saber/data/nextcloud/errors.dart';
-import 'package:saber/data/nextcloud/nextcloud_client_extension.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/i18n/strings.g.dart';
+import 'package:sadab/components/misc/faq.dart';
+import 'package:sadab/data/nextcloud/errors.dart';
+import 'package:sadab/data/nextcloud/nextcloud_client_extension.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/i18n/strings.g.dart';
 import 'package:sbn/font_fallbacks.dart';
 import 'package:yaru/yaru.dart';
 

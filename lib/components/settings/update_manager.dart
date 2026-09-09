@@ -7,10 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:open_file/open_file.dart';
-import 'package:saber/components/settings/update_dialog.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/data/saber_version.dart';
-import 'package:saber/data/version.dart' as version;
+import 'package:sadab/components/settings/update_dialog.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/data/saber_version.dart';
+import 'package:sadab/data/version.dart' as version;
 
 abstract class UpdateManager {
   static final log = Logger('UpdateManager');
