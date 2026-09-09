@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_screenshot/golden_screenshot.dart';
-import 'package:saber/components/theming/saber_theme.dart';
-import 'package:saber/data/flavor_config.dart';
-import 'package:saber/data/prefs.dart';
-import 'package:saber/pages/user/login.dart';
+import 'package:sadab/components/theming/saber_theme.dart';
+import 'package:sadab/data/flavor_config.dart';
+import 'package:sadab/data/prefs.dart';
+import 'package:sadab/pages/user/login.dart';
 
 import 'utils/test_user.dart';
 
@@ -50,7 +50,6 @@ void main() {
       await tester.tap(find.text('How do I change my encryption password?'));
       await tester.pumpAndSettle();
 
-      // scroll down
       await tester.scrollUntilVisible(
         find.text('How can I delete my account?'),
         9999999,
