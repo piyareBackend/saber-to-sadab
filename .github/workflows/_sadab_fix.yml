@@ -1,0 +1,59 @@
+name: Sadab root fix
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: "./.github/shared_workflows/install_apt_dependencies"
+
+      - name: Setup Flutter
+        uses: adil192/setup-flutter-submodule@v3
+        with:
+          flutter-path: submodules/flutter
+
+      - name: Disable Flutter CLI animations
+        run: flutter config --no-cli-animations
+
+      - name: Apply root fixes
+        run: python3 .github/sadab_root_fix.py
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Dart analyze
+        run: dart analyze
+
+      - name: Format check
+        run: dart format --set-exit-if-changed .
+
+      - name: Flutter tests
+        run: flutter test --coverage --no-pub --file-reporter=json:test-results.json
+
+      - name: Android debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Commit verified changes and remove fixer
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f .github/sadab_root_fix.py .github/workflows/_sadab_fix.yml
+          git add -A
+          git diff --cached --check
+          git commit -m 'fix: complete Sadab CI and tablet UX integration'
+          git push origin HEAD:main
