@@ -1622,8 +1622,8 @@ class EditorState extends State<Editor> {
             ? VerticalDirection.up
             : VerticalDirection.down,
         children: [
-          Expanded(child: canvas),
           toolbar,
+          Expanded(child: canvas),
           readonlyBanner,
         ],
       );

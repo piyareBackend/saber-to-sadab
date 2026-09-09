@@ -7,6 +7,7 @@ import 'package:sadab/components/canvas/_canvas_painter.dart';
 import 'package:sadab/components/canvas/_stroke.dart';
 import 'package:sadab/components/canvas/canvas_image.dart';
 import 'package:sadab/components/canvas/image/editor_image.dart';
+import 'package:sadab/components/canvas/paper_grain.dart';
 import 'package:sadab/data/editor/editor_core_info.dart';
 import 'package:sadab/data/prefs.dart';
 import 'package:sadab/data/tools/select.dart';
@@ -63,8 +64,7 @@ class _InnerCanvasState extends State<InnerCanvas> {
     final colorScheme = theme.colorScheme;
     final brightness = theme.brightness;
     final invert = stows.editorAutoInvert.value && brightness == .dark && !stows.sadabEInkMode.value;
-    final Color backgroundColor =
-        widget.coreInfo.backgroundColor ?? InnerCanvas.defaultBackgroundColor;
+    final Color backgroundColor = stows.sadabEInkMode.value ? sadabPaperColor(stows.sadabPaperPreset.value) : (widget.coreInfo.backgroundColor ?? InnerCanvas.defaultBackgroundColor);
 
     if (widget.coreInfo.pages.isEmpty) {
       return SizedBox(width: widget.width, height: widget.height);
@@ -148,6 +148,7 @@ class _InnerCanvasState extends State<InnerCanvas> {
           child: DeferredPointerHandler(
             child: Stack(
               children: [
+                if (stows.sadabEInkMode.value && page.backgroundImage == null) const Positioned.fill(child: PaperGrain()),
                 if (page.backgroundImage != null)
                   CanvasImage(
                     filePath: widget.coreInfo.filePath,
