@@ -74,14 +74,11 @@ class FolderSidebar extends StatelessWidget {
                 child: Card(
                   margin: EdgeInsets.zero,
                   elevation: 0,
-                  color: scheme.primaryContainer,
+                  color: path == null ? scheme.primaryContainer : scheme.surfaceContainer,
                   child: ListTile(
                     dense: true,
-                    leading: Icon(Icons.notes_outlined, color: scheme.onPrimaryContainer),
-                    title: Text(
-                      'All Notes',
-                      style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600),
-                    ),
+                    leading: Icon(Icons.notes_outlined, color: scheme.onSurface),
+                    title: const Text('All Notes', style: TextStyle(fontWeight: FontWeight.w600)),
                     selected: path == null,
                     onTap: () => onFolderTap(''),
                   ),
@@ -110,27 +107,20 @@ class FolderSidebar extends StatelessWidget {
                       leading: Icon(Icons.folder_outlined, color: scheme.primary),
                       title: Text(folder, maxLines: 1, overflow: TextOverflow.ellipsis),
                       onTap: () => onFolderTap(folder),
-                      trailing: PopupMenuButton<String>(
-                        tooltip: 'Folder actions',
-                        onSelected: (action) async {
-                          if (action == 'rename') {
-                            await showDialog<void>(
-                              context: context,
-                              builder: (_) => RenameFolderButton(
-                                folderName: folder,
-                                doesFolderExist: doesFolderExist,
-                                renameFolder: (newName) => onRenameFolder(folder, newName),
-                              ),
-                            );
-                          } else if (action == 'delete') {
-                            await onDeleteFolder(folder);
-                          }
-                        },
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'rename', child: Text('Rename')),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RenameFolderButton(
+                            folderName: folder,
+                            doesFolderExist: doesFolderExist,
+                            renameFolder: (newName) => onRenameFolder(folder, newName),
+                          ),
+                          DeleteFolderButton(
+                            folderName: folder,
+                            deleteFolder: onDeleteFolder,
+                            isFolderEmpty: isFolderEmpty,
+                          ),
                         ],
-                        icon: const Icon(Icons.more_horiz, size: 20),
                       ),
                     );
                   },
@@ -139,7 +129,7 @@ class FolderSidebar extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(12),
                 child: Text(
-                  'Tip: long folders can be renamed or removed from their menu.',
+                  'Use the folder list for quick navigation and management.',
                   style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
                 ),
               ),
