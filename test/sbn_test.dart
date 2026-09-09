@@ -6,17 +6,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_screenshot/golden_screenshot.dart';
 import 'package:path/path.dart' as p;
-import 'package:saber/components/canvas/canvas.dart';
-import 'package:saber/components/canvas/image/editor_image.dart';
-import 'package:saber/components/canvas/pencil_shader.dart';
-import 'package:saber/data/editor/editor_core_info.dart';
-import 'package:saber/data/editor/editor_exporter.dart';
-import 'package:saber/data/editor/page.dart';
-import 'package:saber/data/file_manager/file_manager.dart';
-import 'package:saber/data/flavor_config.dart';
-import 'package:saber/data/tools/laser_pointer.dart';
-import 'package:saber/data/tools/stroke_properties.dart';
-import 'package:saber/i18n/strings.g.dart';
+import 'package:sadab/components/canvas/canvas.dart';
+import 'package:sadab/components/canvas/image/editor_image.dart';
+import 'package:sadab/components/canvas/pencil_shader.dart';
+import 'package:sadab/data/editor/editor_core_info.dart';
+import 'package:sadab/data/editor/editor_exporter.dart';
+import 'package:sadab/data/editor/page.dart';
+import 'package:sadab/data/file_manager/file_manager.dart';
+import 'package:sadab/data/flavor_config.dart';
+import 'package:sadab/data/tools/laser_pointer.dart';
+import 'package:sadab/data/tools/stroke_properties.dart';
+import 'package:sadab/i18n/strings.g.dart';
 
 import 'utils/test_mock_channel_handlers.dart';
 
@@ -157,7 +157,7 @@ void main() {
               path: path,
               page: page,
               coreInfo: coreInfo,
-              currentScale: double.minPositive, // Very zoomed out
+              currentScale: double.minPositive,
             ),
           );
           await tester.loadAssets(alsoLoadTheseFonts: ['Dekko']);
@@ -176,14 +176,12 @@ void main() {
             final pdfFile = File(p.join(tmpDir, '$sbnName.pdf'));
             final pngFile = File(p.join(tmpDir, '$sbnName.pdf.png'));
 
-            // Generate PDF file and write to disk
             await tester.runAsync(() async {
               final doc = await EditorExporter.generatePdf(coreInfo, context);
               final bytes = await doc.save();
               await pdfFile.writeAsBytes(bytes);
             });
 
-            // Convert PDF to PNG with Ghostscript
             await tester.runAsync(
               () => Process.run('gs', [
                 '-sDEVICE=pngalpha',
@@ -194,10 +192,7 @@ void main() {
               ], runInShell: true),
             );
 
-            // Load PNG from disk
             final pdfImage = await tester.runAsync(() => pngFile.readAsBytes());
-
-            // Precache image and render it
             final pdfImageProvider = MemoryImage(pdfImage!);
             await tester.runAsync(
               () => precacheImage(pdfImageProvider, context),
@@ -224,7 +219,6 @@ void main() {
       EditorImage.shouldLoadOutImmediately = true;
       addTearDown(() => EditorImage.shouldLoadOutImmediately = false);
 
-      // copy the file to the temporary directory
       await tester.runAsync(
         () => Future.wait([
           FileManager.getFile('/$path')
@@ -290,7 +284,6 @@ void main() {
   });
 }
 
-/// Provides a [BuildContext] with the necessary inherited widgets
 Future<BuildContext> _getBuildContext(
   WidgetTester tester,
   Size pageSize,
@@ -365,7 +358,6 @@ Future<void> _precacheImages({
   required BuildContext context,
   required EditorPage page,
 }) async {
-  // FileImages aren't working in tests, so replace them with MemoryImages
   final backgroundImage = page.backgroundImage;
   await Future.wait([
     for (final image in page.images)
@@ -376,13 +368,13 @@ Future<void> _precacheImages({
           ),
     if (backgroundImage is PngEditorImage)
       if (backgroundImage.imageProvider is FileImage)
-        (backgroundImage.imageProvider as FileImage).file.readAsBytes().then(
-          (bytes) => (page.backgroundImage as PngEditorImage).imageProvider =
-              MemoryImage(bytes),
-        ),
+        (backgroundImage.imageProvider as PngEditorImage).imageProvider =
+            MemoryImage(
+              await (backgroundImage.imageProvider as FileImage).file
+                  .readAsBytes(),
+            ),
   ]);
 
-  // Precache images
   await Future.wait([
     for (final image in page.images) image.precache(context),
     if (page.backgroundImage != null) page.backgroundImage!.precache(context),
