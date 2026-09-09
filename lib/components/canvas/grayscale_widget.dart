@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class GrayscaleWidget extends StatelessWidget {
   const new({super.key, required this.child});
-  final Widget child;
+  final child;
 
   static const ColorFilter filter = ColorFilter.matrix([
     0.2126,

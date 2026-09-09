@@ -8,8 +8,8 @@ import 'package:sadab/data/editor/editor_core_info.dart';
 import 'package:sadab/data/editor/page.dart';
 import 'package:sadab/data/tools/_tool.dart';
 import 'package:sadab/data/tools/pen.dart';
-import 'package:sadab/data/tools/select.dart';
 import 'package:sadab/data/prefs.dart';
+import 'package:sadab/data/tools/select.dart';
 import 'package:sbn/tool_id.dart';
 
 class Canvas extends StatelessWidget {

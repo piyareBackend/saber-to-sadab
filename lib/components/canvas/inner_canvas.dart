@@ -8,7 +8,6 @@ import 'package:sadab/components/canvas/_stroke.dart';
 import 'package:sadab/components/canvas/canvas_image.dart';
 import 'package:sadab/components/canvas/image/editor_image.dart';
 import 'package:sadab/components/canvas/paper_grain.dart';
-import 'package:sadab/components/canvas/paper_grain.dart';
 import 'package:sadab/data/editor/editor_core_info.dart';
 import 'package:sadab/data/prefs.dart';
 import 'package:sadab/data/tools/select.dart';
