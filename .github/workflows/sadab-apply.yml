@@ -16,8 +16,8 @@ jobs:
           from pathlib import Path
           p = Path('.github/scripts/apply_sadab.py')
           s = p.read_text()
-          a = s.index("          # Compact toolbar button ergonomics.")
-          b = s.index("          # New, cache-friendly paper grain renderer.")
+          a = s.index('# Compact toolbar button ergonomics.')
+          b = s.index('# New, cache-friendly paper grain renderer.')
           s = s[:a] + s[b:]
           p.write_text(s)
           PY
