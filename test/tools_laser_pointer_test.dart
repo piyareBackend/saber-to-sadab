@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saber/data/editor/page.dart';
-import 'package:saber/data/tools/laser_pointer.dart';
-import 'package:saber/data/tools/pen.dart';
+import 'package:sadab/data/editor/page.dart';
+import 'package:sadab/data/tools/laser_pointer.dart';
+import 'package:sadab/data/tools/pen.dart';
 
 void main() {
   group('Laser fade', () {
@@ -48,7 +48,7 @@ void main() {
 
     test('reduces point count', () async {
       final stroke = Pen.currentStroke as LaserStroke;
-      var lastStrokeLength = stroke.length + 1; // +1 for initial fadeOutDelay
+      var lastStrokeLength = stroke.length + 1;
 
       LaserPointer.isDrawing = false;
       await LaserPointer.fadeOutStroke(
@@ -68,7 +68,7 @@ void main() {
           printOnFailure(
             'Waiting for $duration, stroke length ${stroke.length}',
           );
-          if (duration == Duration.zero) return; // skip wait before first pop
+          if (duration == Duration.zero) return;
           expect(stroke.length, lessThan(lastStrokeLength));
           lastStrokeLength = stroke.length;
         },
