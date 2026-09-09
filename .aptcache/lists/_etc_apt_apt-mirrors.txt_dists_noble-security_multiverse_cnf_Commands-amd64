@@ -1,0 +1,77 @@
+suite: noble-security
+component: multiverse
+arch: amd64
+
+
+name: libnvidia-gl-550-server
+version: 550.163.01-0ubuntu0.24.04.1
+commands: nvidia-ngx-updater
+
+name: libnvidia-gl-595
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-ngx-updater,nvidia-pcc
+
+name: libnvidia-gl-595-server
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-ngx-updater,nvidia-pcc
+
+name: nvidia-compute-utils-550-server
+version: 550.163.01-0ubuntu0.24.04.1
+commands: nvidia-cuda-mps-control,nvidia-cuda-mps-server,nvidia-persistenced
+
+name: nvidia-compute-utils-595
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-cuda-mps-control,nvidia-cuda-mps-server,nvidia-persistenced
+
+name: nvidia-compute-utils-595-server
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-cuda-mps-control,nvidia-cuda-mps-server,nvidia-persistenced
+
+name: nvidia-fabricmanager-535
+version: 535.309.01-0ubuntu0.24.04.1
+commands: nv-fabricmanager,nvswitch-audit
+
+name: nvidia-fabricmanager-550
+version: 550.163.01-0ubuntu0.24.04.1
+commands: nv-fabricmanager,nvswitch-audit
+
+name: nvidia-fabricmanager-580
+version: 580.159.03-0ubuntu0.24.04.1
+commands: nv-fabricmanager,nvidia-fabricmanager-start.sh,nvswitch-audit
+
+name: nvidia-fabricmanager-595
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nv-fabricmanager,nvidia-fabricmanager-start.sh,nvswitch-audit
+
+name: nvidia-imex-550
+version: 550.163.01-0ubuntu0.24.04.1
+commands: nvidia-imex,nvidia-imex-ctl
+
+name: nvidia-imex-580
+version: 580.159.03-0ubuntu0.24.04.2
+commands: nvidia-imex,nvidia-imex-ctl
+
+name: nvidia-imex-595
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-imex,nvidia-imex-ctl
+
+name: nvidia-kernel-common-595
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-powerd,nvidia-sleep.sh,ub-device-create
+
+name: nvidia-kernel-common-595-server
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-powerd,nvidia-sleep.sh,ub-device-create
+
+name: nvidia-utils-550-server
+version: 550.163.01-0ubuntu0.24.04.1
+commands: nvidia-bug-report.sh,nvidia-debugdump,nvidia-smi,nvidia-xconfig
+
+name: nvidia-utils-595
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-bug-report.sh,nvidia-debugdump,nvidia-smi,nvidia-xconfig
+
+name: nvidia-utils-595-server
+version: 595.71.05-0ubuntu0.24.04.1
+commands: nvidia-bug-report.sh,nvidia-debugdump,nvidia-smi,nvidia-xconfig
+

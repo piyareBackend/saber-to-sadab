@@ -1,0 +1,44 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+Origin: microsoft-ubuntu-noble-prod noble
+Label: microsoft-ubuntu-noble-prod noble
+Suite: noble
+Codename: noble
+Date: Wed, 09 Sep 2026 01:24:14 +0000
+Architectures: amd64 arm64 armhf all
+Components: main
+Acquire-By-Hash: yes
+SHA256:
+ a4e108a71b67ce935b238407f65d60234aea8d253a115a69d4181660da8bdc2e          2720860 main/binary-amd64/Packages
+ cc602dedf6a515fe7f2cda816434681f3329bd2a9011bd90d8f16fb813cc4a7e           454032 main/binary-amd64/Packages.gz
+ 3379946c8eaa78bf07840a4c14e1cd10c49dead5b1061bf7044f874ab5e1ca30          2554709 main/binary-arm64/Packages
+ 199af24bc36e7203cd4ea9f854c2646a02715d89301d50d086fbc2c38d18d9e4           405993 main/binary-arm64/Packages.gz
+ 114afcf238433ca08360ee9aa4b22a4e552d2178444e63d5dbcd73372740061c           123810 main/binary-armhf/Packages
+ 4f7ebf6cf2601596c4dd65b7aa2708294f69389ea955067d8ba422e84bb51ad8            12536 main/binary-armhf/Packages.gz
+ 93c368a2415f6df306fdbb67933e42f6c0f338e743046a85cf59765ed338a4f5             1593 main/binary-all/Packages
+ c6ab0e2bea65b056e9193c1f94bac75c8f6caf6e95d04b5bd73401c342117cfe              643 main/binary-all/Packages.gz
+ cd7eaafd4bdb9bb5a06a935d10c7d45df258c04ac245b9110e75f4952232c017           174745 main/source/Sources
+ 909bfde898aa92c6b487aeef42cab5e2fbfabb9b4e24386345c3b1913c9a3bbe            54602 main/source/Sources.gz
+SHA512:
+ ec1395b2b8237d99e884c06dd6594e0adf31b7eda6978f6a24d620a22ca10bbd473e35558493da761868c59d4db1b04009e5276a145dfcc5c9c641b17685c7b3          2720860 main/binary-amd64/Packages
+ 94f398e675fd4f661ff364271ef3022264269a2d71963a3d5eea08e07068953206e3ad591e5f9af323da894c68e9e2538c1f76bff06b15024af497b700afc23e           454032 main/binary-amd64/Packages.gz
+ 3d82e73110b936fbaf8068d7240ff5c3d9836de2559528425d95cf45e8db4b5a9caf09934457b02313aacdab8759cd8df60b96852213eb7056ed3b7270faa8b4          2554709 main/binary-arm64/Packages
+ 615370a0619210c7593ed26c79d792913b8ddae07cf0a66611b9ca6db24d495796b0de56a89ffcc9378268ce1e130f3b6c344de4dfc88c1bcc4f15c8ca4668c9           405993 main/binary-arm64/Packages.gz
+ 0856f91fb12a89994260c42399cf947ca7e653b37a4c65dce727f8d56ae1d4f83360587ef2fd8bdac59cae99d60aece8a1193f174b34d132a35b33fb00e6e645           123810 main/binary-armhf/Packages
+ 8af24e32dd43c9e117c7790851a3b5bd76d48b95e8b133002e1a22ecca0d1aca0d2b3390d0896784c5ebdd5d5644c8278a9f4450eb4d51f9a0ccb6d7c20882ae            12536 main/binary-armhf/Packages.gz
+ 09432827d2d0062c1ac975c51c48ceb8fb2185f8a22d1072aa0f23600d1cce48b15425d8823f4cb01b93e192aac2bf03dbb84563424898f9ee040b0836f9b630             1593 main/binary-all/Packages
+ e233b35d72827ef629c679bdba33c399c31c4aa2089a22a97122136547d746a3b84f9e89f88dffe7c4f0ca55805056234a2e76dee6cc52d6c176b0b44d4067cd              643 main/binary-all/Packages.gz
+ 6a94b55ee191fc60abb14bdb55a5d9a212958c33026b5bc31bd92ee1ae019bdf36154f7d2e7587659cce3cf9df6573f35aea163a5c926a2a2e05a32df136c57f           174745 main/source/Sources
+ 26bfc60e6c1116f0c6c718d85434c4e91bb3d88817c4408a8861c0f39d4de72ef5d7060ffa3fe9e45e0907bea66d8db7a79f64c21eaff1f14bb421f58098dd6f            54602 main/source/Sources.gz
+
+-----BEGIN PGP SIGNATURE-----
+Version: BSN Pgp v1.0.0.0
+
+iQEcBAEBCAAGBQJqoLW9AAoJEOs+lK2+EinPS2gIALIwdppl8NunTi4LqSXPbt9B
+8Xkt0e6+lFY2uTr5KDsE6/DyCE4xwJFzKhahuGRBdKRCLkte7QR40Zmc965LgQsc
+TgWsuCe9/mn464C8aepIcgVwJJraSdxL8i+re1ZeZiZhPF3A0ipp3j3UbjkDsbdv
+miItIJzo0WBM6/yftFhal4SlhgWJELiBm517YPvfkSivAU0oOb1KpkSvHLbInIml
+SPX/Vq5F5DQVoAKSzbX7JO1QkaF1HFCGXkkg4TkIrxqR2SKEI1buNAufHguBPpPi
+ovWhrnHmGe3JXIPQk9962mbXg1nhv+dSaaqWYarUmsuIg2JW0iQ/okU/gc2RLwE=
+-----END PGP SIGNATURE-----
