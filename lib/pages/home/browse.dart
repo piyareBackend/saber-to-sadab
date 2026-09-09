@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 import 'package:sadab/components/home/delete_note_button.dart';
 import 'package:sadab/components/home/export_note_button.dart';
+import 'package:sadab/components/home/folder_sidebar.dart';
 import 'package:sadab/components/home/grid_folders.dart';
 import 'package:sadab/components/home/home_layout_button.dart';
 import 'package:sadab/components/home/masonry_files.dart';
@@ -17,7 +18,6 @@ import 'package:sadab/components/home/path_components.dart';
 import 'package:sadab/components/home/rename_note_button.dart';
 import 'package:sadab/components/home/sort_button.dart';
 import 'package:sadab/components/home/syncing_button.dart';
-import 'package:sadab/components/theming/saber_theme.dart';
 import 'package:sadab/data/file_manager/file_manager.dart';
 import 'package:sadab/data/prefs.dart';
 import 'package:sadab/data/routes.dart';
@@ -37,21 +37,15 @@ class BrowsePage extends StatefulHookWidget {
 
 class _BrowsePageState extends State<BrowsePage> {
   DirectoryChildren? children;
-
   String? path;
-
   final ValueNotifier<List<String>> selectedFiles = ValueNotifier([]);
 
   @override
   void initState() {
     path = widget.initialPath;
-
     findChildrenOfPath();
-    fileWriteSubscription = FileManager.fileWriteStream.stream.listen(
-      fileWriteListener,
-    );
+    fileWriteSubscription = FileManager.fileWriteStream.stream.listen(fileWriteListener);
     selectedFiles.addListener(_setState);
-
     super.initState();
   }
 
@@ -63,6 +57,7 @@ class _BrowsePageState extends State<BrowsePage> {
   }
 
   StreamSubscription? fileWriteSubscription;
+
   void fileWriteListener(FileOperation event) {
     if (!event.filePath.startsWith(path ?? '/')) return;
     findChildrenOfPath(fromFileListener: true);
@@ -70,22 +65,17 @@ class _BrowsePageState extends State<BrowsePage> {
 
   void _setState() => setState(() {});
 
-  Future findChildrenOfPath({bool fromFileListener = false}) async {
+  Future<void> findChildrenOfPath({bool fromFileListener = false}) async {
     if (!mounted) return;
-
     if (fromFileListener) {
-      // don't refresh if we're not on the home page
       final location = GoRouterState.of(context).uri.toString();
       if (!location.startsWith(RoutePaths.prefixOfHome)) return;
     }
-
-    children =
-        BrowsePage.overrideChildren ??
+    children = BrowsePage.overrideChildren ??
         await FileManager.getChildrenOfDirectory(
           path ?? '/',
           sortMetric: stows.browseSortMetric.value,
         );
-
     if (mounted) setState(() {});
   }
 
@@ -103,9 +93,7 @@ class _BrowsePageState extends State<BrowsePage> {
 
   void onPathComponentTap(String? newPath) {
     selectedFiles.value = [];
-    if (newPath == null || newPath.isEmpty || newPath == '/') {
-      newPath = null;
-    }
+    if (newPath == null || newPath.isEmpty || newPath == '/') newPath = null;
     path = newPath;
     context.go(HomeRoutes.browseFilePath(path ?? '/'));
     findChildrenOfPath();
@@ -117,97 +105,159 @@ class _BrowsePageState extends State<BrowsePage> {
     findChildrenOfPath();
   }
 
+  Future<void> _openFolderManager() async {
+    final currentChildren = children;
+    if (currentChildren == null || !mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => SizedBox(
+        height: MediaQuery.sizeOf(context).height * .72,
+        child: FolderSidebar(
+          path: path,
+          folders: currentChildren.directories,
+          onFolderTap: (folder) {
+            Navigator.of(context).pop();
+            if (folder.isEmpty) {
+              onPathComponentTap(null);
+            } else {
+              onDirectoryTap(folder);
+            }
+          },
+          onCreateFolder: createFolder,
+          doesFolderExist: (name) => currentChildren.directories.contains(name),
+          onRenameFolder: (oldName, newName) async {
+            await FileManager.renameDirectory('${path ?? ''}/$oldName', newName);
+            await findChildrenOfPath();
+          },
+          onDeleteFolder: (name) async {
+            await FileManager.deleteDirectory('${path ?? ''}/$name');
+            await findChildrenOfPath();
+          },
+          isFolderEmpty: (name) async {
+            final result = await FileManager.getChildrenOfDirectory('${path ?? ''}/$name');
+            return result?.isEmpty ?? true;
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     final platform = Theme.of(context).platform;
-    final crossAxisCount = MediaQuery.sizeOf(context).width ~/ 300 + 1;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final crossAxisCount = screenWidth ~/ 300 + 1;
+    final showSidebar = screenWidth >= 900;
     useListenable(stows.homeLayout);
     useOnListenableChange(stows.browseSortMetric, findChildrenOfPath);
 
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            collapsedHeight: kToolbarHeight,
-            expandedHeight: 200 - 8,
-            pinned: true,
-            scrolledUnderElevation: 1,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                t.home.titles.browse,
-                style: TextStyle(color: colorScheme.onSurface),
-              ),
-              centerTitle: false,
-              titlePadding: const EdgeInsetsDirectional.only(
-                start: 16,
-                bottom: 8, // less than other pages for path components
-              ),
+    final content = CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          collapsedHeight: kToolbarHeight,
+          expandedHeight: 168,
+          pinned: true,
+          scrolledUnderElevation: 1,
+          flexibleSpace: FlexibleSpaceBar(
+            title: Text(
+              t.home.titles.browse,
+              style: TextStyle(color: colorScheme.onSurface),
             ),
-            actions: const [
-              BrowseSortButton(),
-              HomeLayoutButton(),
-              SyncingButton(),
-            ],
+            centerTitle: false,
+            titlePadding: const EdgeInsetsDirectional.only(start: 16, bottom: 8),
           ),
-          SliverToBoxAdapter(
-            child: PathComponents(path, onPathComponentTap: onPathComponentTap),
-          ),
-          const SliverPadding(padding: .only(bottom: 16)),
-          GridFolders(
-            isAtRoot: path?.isEmpty ?? true,
-            crossAxisCount: crossAxisCount,
-            onTap: onDirectoryTap,
-            createFolder: createFolder,
-            doesFolderExist: (String folderName) {
-              return children?.directories.contains(folderName) ?? false;
-            },
-            renameFolder: (String oldName, String newName) async {
-              final oldPath = '${path ?? ''}/$oldName';
-              await FileManager.renameDirectory(oldPath, newName);
-              findChildrenOfPath();
-            },
-            isFolderEmpty: (String folderName) async {
-              final folderPath = '${path ?? ''}/$folderName';
-              final children = await FileManager.getChildrenOfDirectory(
-                folderPath,
-              );
-              return children?.isEmpty ?? true;
-            },
-            deleteFolder: (String folderName) async {
-              final folderPath = '${path ?? ''}/$folderName';
-              await FileManager.deleteDirectory(folderPath);
-              findChildrenOfPath();
-            },
-            folders: [
-              for (final directoryPath in children?.directories ?? const [])
-                directoryPath,
-            ],
-          ),
-          if (children == null) ...[
-            // loading
-          ] else if (children!.isEmpty) ...[
-            const SliverSafeArea(sliver: SliverToBoxAdapter(child: NoFiles())),
-          ] else ...[
-            SliverSafeArea(
-              top: false,
-              minimum: const .only(
-                top: 8,
-                // Allow space for the FloatingActionButton
-                bottom: 70,
+          actions: [
+            if (!showSidebar)
+              IconButton(
+                tooltip: 'Folders',
+                onPressed: _openFolderManager,
+                icon: const Icon(Icons.folder_copy_outlined),
               ),
-              sliver: MasonryFiles(
-                crossAxisCount: crossAxisCount,
-                files: [
-                  for (final filePath in children?.files ?? const [])
-                    "${path ?? ""}/$filePath",
-                ],
-                selectedFiles: selectedFiles,
-              ),
-            ),
+            const BrowseSortButton(),
+            const HomeLayoutButton(),
+            const SyncingButton(),
           ],
+        ),
+        SliverToBoxAdapter(
+          child: PathComponents(path, onPathComponentTap: onPathComponentTap),
+        ),
+        const SliverPadding(padding: EdgeInsets.only(bottom: 12)),
+        GridFolders(
+          isAtRoot: path?.isEmpty ?? true,
+          crossAxisCount: crossAxisCount,
+          onTap: onDirectoryTap,
+          createFolder: createFolder,
+          doesFolderExist: (String folderName) => children?.directories.contains(folderName) ?? false,
+          renameFolder: (String oldName, String newName) async {
+            await FileManager.renameDirectory('${path ?? ''}/$oldName', newName);
+            await findChildrenOfPath();
+          },
+          isFolderEmpty: (String folderName) async {
+            final result = await FileManager.getChildrenOfDirectory('${path ?? ''}/$folderName');
+            return result?.isEmpty ?? true;
+          },
+          deleteFolder: (String folderName) async {
+            await FileManager.deleteDirectory('${path ?? ''}/$folderName');
+            await findChildrenOfPath();
+          },
+          folders: [for (final directoryPath in children?.directories ?? const []) directoryPath],
+        ),
+        if (children == null) ...[
+          // loading
+        ] else if (children!.isEmpty) ...[
+          const SliverSafeArea(sliver: SliverToBoxAdapter(child: NoFiles())),
+        ] else ...[
+          SliverSafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(top: 8, bottom: 70),
+            sliver: MasonryFiles(
+              crossAxisCount: crossAxisCount,
+              files: [for (final filePath in children?.files ?? const []) '${path ?? ''}/$filePath'],
+              selectedFiles: selectedFiles,
+            ),
+          ),
         ],
-      ),
+      ],
+    );
+
+    return Scaffold(
+      body: showSidebar
+          ? Row(
+              children: [
+                FolderSidebar(
+                  path: path,
+                  folders: children?.directories ?? const [],
+                  onFolderTap: (folder) {
+                    if (folder.isEmpty) {
+                      onPathComponentTap(null);
+                    } else {
+                      onDirectoryTap(folder);
+                    }
+                  },
+                  onCreateFolder: createFolder,
+                  doesFolderExist: (name) => children?.directories.contains(name) ?? false,
+                  onRenameFolder: (oldName, newName) async {
+                    await FileManager.renameDirectory('${path ?? ''}/$oldName', newName);
+                    await findChildrenOfPath();
+                  },
+                  onDeleteFolder: (name) async {
+                    await FileManager.deleteDirectory('${path ?? ''}/$name');
+                    await findChildrenOfPath();
+                  },
+                  isFolderEmpty: (name) async {
+                    final result = await FileManager.getChildrenOfDirectory('${path ?? ''}/$name');
+                    return result?.isEmpty ?? true;
+                  },
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: content),
+              ],
+            )
+          : content,
       floatingActionButton: NewNoteButton(
         cupertino: platform.isCupertino,
         path: path,
@@ -219,9 +269,7 @@ class _BrowsePageState extends State<BrowsePage> {
                 axis: CollapsibleAxis.vertical,
                 collapsed: selectedFiles.value.length != 1,
                 child: RenameNoteButton(
-                  existingPath: selectedFiles.value.isEmpty
-                      ? ''
-                      : selectedFiles.value.first,
+                  existingPath: selectedFiles.value.first,
                   unselectNotes: () => selectedFiles.value = [],
                 ),
               ),
