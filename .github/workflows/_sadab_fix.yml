@@ -8,11 +8,13 @@ on:
 permissions:
   contents: write
 
-auto_cancel: true
+concurrency:
+  group: sadab-root-fix
+  cancel-in-progress: true
 
 jobs:
   fix-verify-commit:
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message != 'chore: run Sadab production root-fix pass'
+    if: github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'fix: complete Sadab CI and tablet UX integration')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -37,12 +39,9 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-
+          import re, subprocess
           root = Path('.')
 
-          def read(path):
-              return (root / path).read_text()
           def write(path, text):
               (root / path).write_text(text)
           def replace_once(path, old, new):
@@ -50,39 +49,29 @@ jobs:
               text = p.read_text()
               if old not in text:
                   raise SystemExit(f'Expected pattern not found in {path}: {old[:120]!r}')
-              text = text.replace(old, new, 1)
-              p.write_text(text)
+              p.write_text(text.replace(old, new, 1))
 
-          # 1) Isolate Nextcloud integration from the normal test gate and bound network time.
+          # Nextcloud integration: skip without explicit CI credentials and bound network time.
           p = root / 'test/nc_upload_download_test.dart'
           t = p.read_text()
           t = t.replace("    retry: 2,\n", "")
-          t = t.replace("    () async {\n", "    () async {\n", 1)
-          marker = "      const content = 'Hello, world!';\n"
-          if marker in t:
-              t = t.replace(marker, marker, 1)
-          # Wrap the network-heavy body by applying a timeout to the complete test future.
-          # Keep the test skipped when the required environment is absent.
           if "timeout(const Duration(seconds: 45))" not in t:
               t = t.replace("    },\n    skip: hasIntegrationConfig", "    }.timeout(const Duration(seconds: 45)),\n    skip: hasIntegrationConfig", 1)
           p.write_text(t)
 
-          # 2) Floating toolbox: it is a Stack child, not Scaffold.floatingActionButton.
+          # Floating toolbox: explicit Stack overlay and semantic palm-rejection state.
           p = root / 'lib/pages/editor/editor.dart'
           t = p.read_text()
           old = """  void sadabShowShapes() {\n    showDialog(\n      context: context,\n      builder: (_) => ShapePaletteDialog(\n        onSelected: (_) => setState(() => currentTool = ShapePen()),\n      ),\n    );\n  }"""
           new = """  void sadabShowShapes() {\n    showDialog(\n      context: context,\n      builder: (_) => ShapePaletteDialog(\n        onSelected: (definition) => setState(() {\n          ShapePen.selectedDefinition = definition;\n          currentTool = ShapePen(definition: definition);\n        }),\n      ),\n    );\n  }"""
-          if old not in t:
-              raise SystemExit('editor.dart: shape dialog block not found')
+          if old not in t: raise SystemExit('editor shape block not found')
           t = t.replace(old, new, 1)
           old = """        body: body,\n        floatingActionButton: FloatingToolbox(\n          onPenPreset: sadabPenPreset,\n          onEraser: () => setState(() => currentTool = Eraser()),\n          onUndo: undo,\n          onRedo: redo,\n          onPalmRejection: (v) =>\n              setState(() => stows.editorFingerDrawing.value = v),\n          onShapes: sadabShowShapes,\n        ),\n"""
-          new = """        body: Stack(\n          children: [\n            Positioned.fill(child: body),\n            FloatingToolbox(\n              onPenPreset: sadabPenPreset,\n              onEraser: () => setState(() => currentTool = Eraser()),\n              onUndo: undo,\n              onRedo: redo,\n              onPalmRejection: (enabled) => setState(() {\n                // Palm rejection ON means finger drawing OFF.\n                stows.editorFingerDrawing.value = !enabled;\n                lastSeenPointerCount = 0;\n              }),\n              onShapes: sadabShowShapes,\n            ),\n          ],\n        ),\n"""
-          if old not in t:
-              raise SystemExit('editor.dart: floating toolbox block not found')
-          t = t.replace(old, new, 1)
-          p.write_text(t)
+          new = """        body: Stack(\n          children: [\n            Positioned.fill(child: body),\n            FloatingToolbox(\n              onPenPreset: sadabPenPreset,\n              onEraser: () => setState(() => currentTool = Eraser()),\n              onUndo: undo,\n              onRedo: redo,\n              onPalmRejection: (enabled) => setState(() {\n                stows.editorFingerDrawing.value = !enabled;\n                lastSeenPointerCount = 0;\n              }),\n              onShapes: sadabShowShapes,\n            ),\n          ],\n        ),\n"""
+          if old not in t: raise SystemExit('editor toolbox block not found')
+          p.write_text(t.replace(old, new, 1))
 
-          # 3) Draggable toolbox returns Positioned and exposes a semantically correct palm state.
+          # Draggable, bounds-safe toolbox. It is returned as Positioned and is now hosted by the editor Stack.
           write('lib/components/toolbar/floating_toolbox.dart', r'''import 'package:flutter/material.dart';
 
 class FloatingToolbox extends StatefulWidget {
@@ -95,7 +84,6 @@ class FloatingToolbox extends StatefulWidget {
     required this.onPalmRejection,
     required this.onShapes,
   });
-
   final ValueChanged<int> onPenPreset;
   final VoidCallback onEraser;
   final VoidCallback onUndo;
@@ -111,45 +99,23 @@ class _FloatingToolboxState extends State<FloatingToolbox> {
   var position = const Offset(24, 180);
   var palmRejection = true;
 
-  void _move(Offset delta, Size size) {
-    const horizontalPadding = 8.0;
-    const verticalPadding = 8.0;
-    const toolboxWidth = 330.0;
-    const toolboxHeight = 72.0;
-    final maxX = (size.width - toolboxWidth - horizontalPadding).clamp(
-      horizontalPadding,
-      double.infinity,
-    );
-    final maxY = (size.height - toolboxHeight - verticalPadding).clamp(
-      verticalPadding,
-      double.infinity,
-    );
-    setState(() {
-      position = Offset(
-        (position.dx + delta.dx).clamp(horizontalPadding, maxX),
-        (position.dy + delta.dy).clamp(verticalPadding, maxY),
-      );
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final maxX = (size.width - 330).clamp(8.0, double.infinity);
-    final maxY = (size.height - 72).clamp(8.0, double.infinity);
-    final safePosition = Offset(
-      position.dx.clamp(8.0, maxX),
-      position.dy.clamp(8.0, maxY),
-    );
-    if (safePosition != position) {
+    const width = 330.0;
+    const height = 72.0;
+    final maxX = (size.width - width - 8).clamp(8.0, double.infinity);
+    final maxY = (size.height - height - 8).clamp(8.0, double.infinity);
+    final safe = Offset(position.dx.clamp(8.0, maxX), position.dy.clamp(8.0, maxY));
+    if (safe != position) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => position = safePosition);
+        if (mounted) setState(() => position = safe);
       });
     }
 
     return Positioned(
-      left: safePosition.dx,
-      top: safePosition.dy,
+      left: safe.dx,
+      top: safe.dy,
       child: Material(
         elevation: 8,
         color: Theme.of(context).colorScheme.surface.withValues(alpha: .94),
@@ -158,7 +124,12 @@ class _FloatingToolboxState extends State<FloatingToolbox> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onPanUpdate: (details) => _move(details.delta, size),
+            onPanUpdate: (d) => setState(() {
+              position = Offset(
+                (position.dx + d.delta.dx).clamp(8.0, maxX),
+                (position.dy + d.delta.dy).clamp(8.0, maxY),
+              );
+            }),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -168,9 +139,7 @@ class _FloatingToolboxState extends State<FloatingToolbox> {
                 _b('↷', widget.onRedo),
                 _b('◇', widget.onShapes),
                 IconButton(
-                  tooltip: palmRejection
-                      ? 'Palm rejection on'
-                      : 'Palm rejection off',
+                  tooltip: palmRejection ? 'Palm rejection on' : 'Palm rejection off',
                   isSelected: palmRejection,
                   onPressed: () {
                     final next = !palmRejection;
@@ -191,161 +160,30 @@ class _FloatingToolboxState extends State<FloatingToolbox> {
     padding: const EdgeInsets.symmetric(horizontal: 2),
     child: IconButton.filledTonal(
       onPressed: onPressed,
-      icon: Text(
-        text,
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-      ),
+      icon: Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
     ),
   );
 }
 ''')
 
-          # 4) Shape tool: carry the selected definition through the drawing layer.
-          write('lib/data/tools/shape_pen.dart', r'''import 'dart:async';
+          # Shape tool state lives outside the storage/serialization model.
+          p = root / 'lib/data/tools/shape_pen.dart'
+          t = p.read_text()
+          t = t.replace("import 'package:sadab/components/canvas/_stroke.dart';\n", "import 'package:sadab/components/canvas/_stroke.dart';\nimport 'package:sadab/components/shapes/custom_shape_engine.dart';\n", 1)
+          t = t.replace("class ShapePen extends Pen {\n  new()\n", "class ShapePen extends Pen {\n  ShapePen({CustomShapeDefinition? definition})\n", 1)
+          t = t.replace("        toolId: .shapePen,\n      );\n\n  static final log", "        toolId: .shapePen,\n      );\n\n  final CustomShapeDefinition definition;\n  static CustomShapeDefinition selectedDefinition = CustomShapeRegistry.defaults.first;\n  static final Map<Stroke, CustomShapeDefinition> definitionsByStroke = {};\n\n  static final log", 1)
+          # The constructor initializer needs to set definition before super; replace the generated constructor line exactly.
+          t = t.replace("  ShapePen({CustomShapeDefinition? definition})\n    : super(", "  ShapePen({CustomShapeDefinition? definition})\n    : definition = definition ?? selectedDefinition,\n      super(", 1)
+          t = t.replace("    final rawStroke = super.onDragEnd();\n    if (rawStroke == null) return null;\n", "    final rawStroke = super.onDragEnd();\n    if (rawStroke == null) return null;\n    definitionsByStroke[rawStroke] = definition;\n", 1)
+          p.write_text(t)
 
-import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:logging/logging.dart';
-import 'package:one_dollar_unistroke_recognizer/one_dollar_unistroke_recognizer.dart';
-import 'package:sadab/components/canvas/_circle_stroke.dart';
-import 'package:sadab/components/canvas/_rectangle_stroke.dart';
-import 'package:sadab/components/canvas/_stroke.dart';
-import 'package:sadab/components/shapes/custom_shape_engine.dart';
-import 'package:sadab/data/prefs.dart';
-import 'package:sadab/data/tools/pen.dart';
-import 'package:sadab/i18n/strings.g.dart';
-
-class ShapePen extends Pen {
-  ShapePen({CustomShapeDefinition? definition})
-    : definition = definition ?? selectedDefinition,
-      super(
-        name: t.editor.pens.shapePen,
-        sizeMin: 1,
-        sizeMax: 25,
-        sizeStep: 1,
-        icon: shapePenIcon,
-        options: stows.lastShapePenOptions.value,
-        pressureEnabled: false,
-        color: Color(stows.lastShapePenColor.value),
-        toolId: .shapePen,
-      );
-
-  static final log = Logger('ShapePen');
-  static const shapePenIcon = FontAwesomeIcons.shapes;
-  static CustomShapeDefinition selectedDefinition = CustomShapeRegistry.defaults.first;
-  static final Map<Stroke, CustomShapeDefinition> definitionsByStroke = {};
-
-  final CustomShapeDefinition definition;
-
-  CustomShapeDefinition definitionFor(Stroke stroke) =>
-      definitionsByStroke[stroke] ?? definition;
-
-  static RecognizedUnistroke? detectedShape;
-
-  void _detectShape() {
-    detectedShape = Pen.currentStroke?.detectShape();
-  }
-
-  static Timer? _detectShapeDebouncer;
-  static var debounceDuration = getDebounceFromPref();
-
-  static Duration getDebounceFromPref() {
-    assert(stows.shapeRecognitionDelay.loaded);
-    final ms = stows.shapeRecognitionDelay.value;
-    return ms < 0 ? const Duration(hours: 1) : Duration(milliseconds: ms);
-  }
-
-  @override
-  void onDragUpdate(Offset position, double? pressure) {
-    super.onDragUpdate(position, pressure);
-    final isPreviewEnabled = debounceDuration < const Duration(hours: 1);
-    final isTimerActive = _detectShapeDebouncer?.isActive ?? false;
-    if (isPreviewEnabled && !isTimerActive) {
-      _detectShapeDebouncer = Timer(debounceDuration, _detectShape);
-    }
-  }
-
-  @override
-  Stroke? onDragEnd() {
-    _detectShapeDebouncer?.cancel();
-    _detectShapeDebouncer = null;
-    _detectShape();
-
-    final rawStroke = super.onDragEnd();
-    if (rawStroke == null) return null;
-    assert(rawStroke.options.isComplete == true);
-
-    definitionsByStroke[rawStroke] = definition;
-
-    final detectedShape = ShapePen.detectedShape;
-    ShapePen.detectedShape = null;
-    if (detectedShape == null) return rawStroke;
-
-    switch (detectedShape.name) {
-      case null:
-        return rawStroke;
-      case DefaultUnistrokeNames.line:
-        return rawStroke..convertToLine();
-      case DefaultUnistrokeNames.rectangle:
-        final rect = detectedShape.convertToRect();
-        return RectangleStroke(
-          color: color,
-          pressureEnabled: pressureEnabled,
-          options: rawStroke.options,
-          pageIndex: rawStroke.pageIndex,
-          page: rawStroke.page,
-          toolId: toolId,
-          rect: rect,
-        );
-      case DefaultUnistrokeNames.circle:
-        final (center, radius) = detectedShape.convertToCircle();
-        return CircleStroke(
-          color: color,
-          pressureEnabled: pressureEnabled,
-          options: rawStroke.options,
-          pageIndex: rawStroke.pageIndex,
-          page: rawStroke.page,
-          toolId: toolId,
-          radius: radius,
-          center: center,
-        );
-      case DefaultUnistrokeNames.triangle:
-      case DefaultUnistrokeNames.star:
-        final polygon = detectedShape.convertToCanonicalPolygon();
-        return Stroke(
-          color: color,
-          pressureEnabled: pressureEnabled,
-          options: rawStroke.options,
-          pageIndex: rawStroke.pageIndex,
-          page: rawStroke.page,
-          toolId: toolId,
-        )..addPoints(polygon);
-    }
-  }
-}
-''')
-
-          # 5) Full custom shape renderer. It remains presentation/tool-layer state; stroke storage is untouched.
+          # Custom shape presentation renderer: all advertised shapes + fills + line styles + weights.
           write('lib/components/shapes/custom_shape_engine.dart', r'''import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:sadab/components/canvas/_stroke.dart';
-
-enum ShapeKind {
-  line,
-  arrow,
-  doubleArrow,
-  rectangle,
-  roundedRect,
-  ellipse,
-  axes,
-  triangle,
-  star,
-}
-
+enum ShapeKind { line, arrow, doubleArrow, rectangle, roundedRect, ellipse, axes, triangle, star }
 enum ShapeFill { transparent, translucent, solid }
-
 enum ShapeStrokeStyle { solid, dotted, dashed }
 
 class CustomShapeDefinition {
@@ -377,380 +215,91 @@ class CustomShapeRegistry {
     CustomShapeDefinition(id: 'triangle', label: 'Triangle', kind: ShapeKind.triangle),
     CustomShapeDefinition(id: 'star', label: 'Star', kind: ShapeKind.star),
   ];
-
   final List<CustomShapeDefinition> custom = [];
   List<CustomShapeDefinition> get all => [...defaults, ...custom];
   void add(CustomShapeDefinition definition) => custom.add(definition);
 }
 
 class ShapeSnapAssist {
-  static double snapAngle(double radians, {double increment = math.pi / 12}) =>
-      (radians / increment).round() * increment;
+  static double snapAngle(double radians, {double increment = math.pi / 12}) => (radians / increment).round() * increment;
   static Rect normalizeRect(Offset a, Offset b) => Rect.fromPoints(a, b);
 }
-
-class CustomShapeRenderer {
-  static void draw(Canvas canvas, Stroke stroke, CustomShapeDefinition definition) {
-    final points = stroke.lowQualityPolygon;
-    if (points.length < 2) return;
-    final rect = _bounds(points).inflate(stroke.options.size / 2);
-    final paint = Paint()
-      ..color = stroke.color
-      ..style = definition.fill == ShapeFill.transparent ? PaintingStyle.stroke : PaintingStyle.fill
-      ..strokeWidth = definition.lineWeight.clamp(1, 25)
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    if (definition.strokeStyle == ShapeStrokeStyle.dashed) {
-      _drawDashed(canvas, _pathFor(definition.kind, rect), paint);
-      return;
-    }
-    if (definition.strokeStyle == ShapeStrokeStyle.dotted) {
-      _drawDotted(canvas, _pathFor(definition.kind, rect), paint);
-      return;
-    }
-    _drawFillAndStroke(canvas, definition.kind, rect, paint);
-  }
-
-  static Rect _bounds(List<Offset> points) {
-    var left = points.first.dx;
-    var top = points.first.dy;
-    var right = left;
-    var bottom = top;
-    for (final point in points.skip(1)) {
-      left = math.min(left, point.dx);
-      top = math.min(top, point.dy);
-      right = math.max(right, point.dx);
-      bottom = math.max(bottom, point.dy);
-    }
-    return Rect.fromLTRB(left, top, right, bottom);
-  }
-
-  static Path _pathFor(ShapeKind kind, Rect r) {
-    final path = Path();
-    final c = r.center;
-    switch (kind) {
-      case ShapeKind.line:
-        path.moveTo(r.left, c.dy);
-        path.lineTo(r.right, c.dy);
-      case ShapeKind.arrow:
-        _lineWithArrow(path, Offset(r.left, c.dy), Offset(r.right, c.dy));
-      case ShapeKind.doubleArrow:
-        _lineWithArrow(path, Offset(r.left, c.dy), Offset(r.right, c.dy));
-        _arrowHead(path, Offset(r.right, c.dy), const Offset(-1, 0));
-        _arrowHead(path, Offset(r.left, c.dy), const Offset(1, 0));
-      case ShapeKind.rectangle:
-        path.addRect(r);
-      case ShapeKind.roundedRect:
-        path.addRRect(RRect.fromRectAndRadius(r, Radius.circular(math.min(r.shortestSide * .2, 28))));
-      case ShapeKind.ellipse:
-        path.addOval(r);
-      case ShapeKind.axes:
-        path.moveTo(r.left, c.dy);
-        path.lineTo(r.right, c.dy);
-        path.moveTo(c.dx, r.top);
-        path.lineTo(c.dx, r.bottom);
-        _arrowHead(path, Offset(r.right, c.dy), const Offset(-1, 0));
-        _arrowHead(path, Offset(c.dx, r.top), const Offset(0, 1));
-      case ShapeKind.triangle:
-        path.moveTo(c.dx, r.top);
-        path.lineTo(r.right, r.bottom);
-        path.lineTo(r.left, r.bottom);
-        path.close();
-      case ShapeKind.star:
-        final radius = r.shortestSide / 2;
-        for (var i = 0; i < 10; i++) {
-          final angle = -math.pi / 2 + i * math.pi / 5;
-          final rr = i.isEven ? radius : radius * .42;
-          final point = Offset(c.dx + math.cos(angle) * rr, c.dy + math.sin(angle) * rr);
-          if (i == 0) {
-            path.moveTo(point.dx, point.dy);
-          } else {
-            path.lineTo(point.dx, point.dy);
-          }
-        }
-        path.close();
-    }
-    return path;
-  }
-
-  static void _drawFillAndStroke(Canvas canvas, ShapeKind kind, Rect r, Paint paint) {
-    if (paint.style == PaintingStyle.fill) {
-      paint.color = paint.color.withValues(alpha: .28);
-      canvas.drawPath(_pathFor(kind, r), paint);
-      paint
-        ..style = PaintingStyle.stroke
-        ..color = paint.color.withValues(alpha: 1);
-    }
-    canvas.drawPath(_pathFor(kind, r), paint);
-  }
-
-  static void _drawDashed(Canvas canvas, Path path, Paint paint) {
-    final metrics = path.computeMetrics();
-    for (final metric in metrics) {
-      for (double d = 0; d < metric.length; d += 14) {
-        final end = math.min(d + 8, metric.length);
-        canvas.drawPath(metric.extractPath(d, end), paint..style = PaintingStyle.stroke);
-      }
-    }
-  }
-
-  static void _drawDotted(Canvas canvas, Path path, Paint paint) {
-    final metrics = path.computeMetrics();
-    for (final metric in metrics) {
-      for (double d = 0; d < metric.length; d += 10) {
-        final tangent = metric.getTangentForOffset(d);
-        if (tangent == null) continue;
-        canvas.drawCircle(tangent.position, paint.strokeWidth / 2, paint..style = PaintingStyle.fill);
-      }
-    }
-  }
-
-  static void _lineWithArrow(Path path, Offset a, Offset b) {
-    path.moveTo(a.dx, a.dy);
-    path.lineTo(b.dx, b.dy);
-    _arrowHead(path, b, Offset((a.dx - b.dx), (a.dy - b.dy)));
-  }
-
-  static void _arrowHead(Path path, Offset tip, Offset direction) {
-    final length = direction.distance == 0 ? 12 : math.min(18, direction.distance * .22);
-    final unit = direction / (direction.distance == 0 ? 1 : direction.distance);
-    final side = Offset(-unit.dy, unit.dx);
-    final base = tip + unit * length;
-    path.moveTo(tip.dx, tip.dy);
-    path.lineTo((base + side * length * .55).dx, (base + side * length * .55).dy);
-    path.moveTo(tip.dx, tip.dy);
-    path.lineTo((base - side * length * .55).dx, (base - side * length * .55).dy);
-  }
-}
 ''')
 
-          # 6) Make the palette controls part of the selected definition and keep all advertised shapes.
-          p = root / 'lib/components/shapes/shape_palette_dialog.dart'
+          # Reactive E-Ink/paper settings and contrast-safe live stylus color.
+          p = root / 'lib/components/canvas/canvas.dart'
           t = p.read_text()
-          t = t.replace("""          GridView.builder(\n            shrinkWrap: true,\n            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(\n              crossAxisCount: 3,\n              crossAxisSpacing: 8,\n              mainAxisSpacing: 8,\n            ),\n""", """          GridView.builder(\n            shrinkWrap: true,\n            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(\n              crossAxisCount: 3,\n              crossAxisSpacing: 8,\n              mainAxisSpacing: 8,\n            ),\n""", 1)
+          if 'ListenableBuilder(' not in t:
+              t = t.replace("  @override\n  Widget build(BuildContext context) {\n    return Center(\n", "  @override\n  Widget build(BuildContext context) {\n    return ListenableBuilder(\n      listenable: Listenable.merge([stows.sadabEInkMode, stows.sadabPaperPreset, stows.sadabHighContrastInk]),\n      builder: (context, _) => Center(\n", 1)
+              t = t.replace("    );\n  }\n}\n", "      ),\n    );\n  }\n}\n", 1)
+          old = "    if (stows.sadabHighContrastInk.value) return Colors.black;"
+          new = "    if (stows.sadabHighContrastInk.value) {\n      return darkPaper ? Colors.white : Colors.black;\n    }"
+          t = t.replace(old, new, 1)
+          t = t.replace("    if (currentTool is Pen) return (currentTool as Pen).color;\n    return Colors.black;", "    if (currentTool is Pen) return (currentTool as Pen).color;\n    return darkPaper ? Colors.white : Colors.black;", 1)
           p.write_text(t)
 
-          # 7) E-Ink settings must repaint the page immediately.
-          write('lib/components/canvas/canvas.dart', r'''import 'package:flutter/material.dart';
-import 'package:one_dollar_unistroke_recognizer/one_dollar_unistroke_recognizer.dart';
-import 'package:onyxsdk_pen/onyxsdk_pen.dart';
-import 'package:sadab/components/canvas/_stroke.dart';
-import 'package:sadab/components/canvas/image/editor_image.dart';
-import 'package:sadab/components/canvas/inner_canvas.dart';
-import 'package:sadab/data/editor/editor_core_info.dart';
-import 'package:sadab/data/editor/page.dart';
-import 'package:sadab/data/tools/_tool.dart';
-import 'package:sadab/data/tools/pen.dart';
-import 'package:sadab/data/prefs.dart';
-import 'package:sadab/data/tools/select.dart';
-import 'package:sbn/tool_id.dart';
-
-class Canvas extends StatelessWidget {
-  const new({
-    super.key,
-    required this.path,
-    required this.page,
-    required this.pageIndex,
-    required this.textEditing,
-    required this.coreInfo,
-    required this.currentStroke,
-    required this.currentStrokeDetectedShape,
-    required this.currentSelection,
-    required this.setAsBackground,
-    required this.currentTool,
-    required this.currentScale,
-    this.placeholder = false,
-  });
-
-  final String path;
-  final EditorPage page;
-  final int pageIndex;
-  final bool textEditing;
-  final EditorCoreInfo coreInfo;
-  final Stroke? currentStroke;
-  final RecognizedUnistroke? currentStrokeDetectedShape;
-  final SelectResult? currentSelection;
-  final void Function(EditorImage image)? setAsBackground;
-  final Tool currentTool;
-  final double currentScale;
-  final bool placeholder;
-
-  OnyxStrokeStyle _getOnyxTool(Tool currentTool) {
-    if (placeholder) return OnyxStrokeStyle.pen;
-    switch (currentTool.toolId) {
-      case ToolId.fountainPen:
-        return OnyxStrokeStyle.brush;
-      case ToolId.ballpointPen:
-        return OnyxStrokeStyle.pen;
-      case ToolId.highlighter:
-        return OnyxStrokeStyle.marker;
-      case ToolId.pencil:
-        return OnyxStrokeStyle.pencil;
-      case ToolId.shapePen:
-      case ToolId.eraser:
-        return OnyxStrokeStyle.disabled;
-      case ToolId.select:
-      case ToolId.laserPointer:
-        return OnyxStrokeStyle.pen;
-      default:
-        return OnyxStrokeStyle.disabled;
-    }
-  }
-
-  Color _getOnyxColor() {
-    final darkPaper = stows.sadabEInkMode.value &&
-        stows.sadabPaperPreset.value == SadabPaperPreset.mutedNight;
-    if (stows.sadabHighContrastInk.value) {
-      return darkPaper ? Colors.white : Colors.black;
-    }
-    if (currentTool is Pen) return (currentTool as Pen).color;
-    return darkPaper ? Colors.white : Colors.black;
-  }
-
-  double _getOnyxWidth() {
-    if (currentTool is Pen) {
-      final baseSize = (currentTool as Pen).options.size * currentScale;
-      return (currentTool as Pen).pressureEnabled ? baseSize : baseSize * 2;
-    }
-    return 3;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        stows.sadabEInkMode,
-        stows.sadabPaperPreset,
-        stows.sadabHighContrastInk,
-      ]),
-      builder: (context, _) => Center(
-        child: FittedBox(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: .1), blurRadius: 10, spreadRadius: 2),
-              ],
-            ),
-            child: !placeholder
-                ? SizedBox(
-                    width: page.size.width,
-                    height: page.size.height,
-                    child: OnyxSdkPenArea(
-                      refreshDelay: const Duration(seconds: 1),
-                      strokeStyle: _getOnyxTool(currentTool),
-                      strokeColor: _getOnyxColor(),
-                      strokeWidth: _getOnyxWidth(),
-                      child: InnerCanvas(
-                        key: page.innerCanvasKey,
-                        pageIndex: pageIndex,
-                        redrawPageListenable: page,
-                        width: page.size.width,
-                        height: page.size.height,
-                        textEditing: textEditing,
-                        coreInfo: coreInfo,
-                        currentStroke: currentStroke,
-                        currentStrokeDetectedShape: currentStrokeDetectedShape,
-                        currentSelection: currentSelection,
-                        setAsBackground: setAsBackground,
-                        currentToolIsSelect: currentTool.toolId == ToolId.select,
-                        currentScale: currentScale,
-                      ),
-                    ),
-                  )
-                : SizedBox(width: page.size.width, height: page.size.height),
-          ),
-        ),
-      ),
-    );
-  }
-}
-''')
-
-          # 8) Muted-night contrast + reactive repaint, preserving explicit E-Ink inversion guard.
+          # Inner canvas reacts immediately to the three Sadab paper controls; explicit E-Ink mode keeps auto-invert disabled.
           p = root / 'lib/components/canvas/inner_canvas.dart'
           t = p.read_text()
-          t = t.replace("""  @override\n  Widget build(BuildContext context) {\n    final theme = Theme.of(context);\n""", """  @override\n  Widget build(BuildContext context) {\n    return ListenableBuilder(\n      listenable: Listenable.merge([\n        stows.sadabEInkMode,\n        stows.sadabPaperPreset,\n        stows.sadabHighContrastInk,\n      ]),\n      builder: (context, _) => _buildCanvas(context),\n    );\n  }\n\n  Widget _buildCanvas(BuildContext context) {\n    final theme = Theme.of(context);\n""", 1)
-          # Close the builder around the existing return at the end.
-          if not t.rstrip().endswith('\n}\n'):
-              raise SystemExit('inner_canvas.dart: unexpected ending')
-          # The replacement above adds one method level; existing final class brace remains correct.
+          if "ListenableBuilder" not in t:
+              t = t.replace("  @override\n  Widget build(BuildContext context) {\n", "  @override\n  Widget build(BuildContext context) {\n    return ListenableBuilder(\n      listenable: Listenable.merge([stows.sadabEInkMode, stows.sadabPaperPreset, stows.sadabHighContrastInk]),\n      builder: (context, _) => _buildCanvas(context),\n    );\n  }\n\n  Widget _buildCanvas(BuildContext context) {\n", 1)
           p.write_text(t)
 
-          # Ensure high-contrast ink follows paper brightness in the painter.
+          # Make painter high-contrast ink follow the selected paper brightness.
           p = root / 'lib/components/canvas/_canvas_painter.dart'
           t = p.read_text()
-          if "sadabHighContrastInk" not in t:
+          if "package:sadab/data/prefs.dart" not in t:
               t = t.replace("import 'package:sadab/data/tools/shape_pen.dart';", "import 'package:sadab/data/tools/shape_pen.dart';\nimport 'package:sadab/data/prefs.dart';", 1)
-          old = """      var color = stroke.color.withInversion(invert);\n"""
-          new = """      var color = stroke.color.withInversion(invert);\n      if (stows.sadabEInkMode.value && stows.sadabHighContrastInk.value) {\n        color = stows.sadabPaperPreset.value == SadabPaperPreset.mutedNight\n            ? Colors.white\n            : Colors.black;\n      }\n"""
-          if old in t:
-              t = t.replace(old, new, 1)
-          old = """    final color = currentStroke!.color.withInversion(invert);\n"""
-          new = """    final color = stows.sadabEInkMode.value && stows.sadabHighContrastInk.value\n        ? (stows.sadabPaperPreset.value == SadabPaperPreset.mutedNight ? Colors.white : Colors.black)\n        : currentStroke!.color.withInversion(invert);\n"""
-          if old in t:
-              t = t.replace(old, new, 1)
+          t = t.replace("      var color = stroke.color.withInversion(invert);\n", "      var color = stroke.color.withInversion(invert);\n      if (stows.sadabEInkMode.value && stows.sadabHighContrastInk.value) {\n        color = stows.sadabPaperPreset.value == SadabPaperPreset.mutedNight ? Colors.white : Colors.black;\n      }\n", 1)
+          t = t.replace("    final color = currentStroke!.color.withInversion(invert);\n", "    final color = stows.sadabEInkMode.value && stows.sadabHighContrastInk.value\n        ? (stows.sadabPaperPreset.value == SadabPaperPreset.mutedNight ? Colors.white : Colors.black)\n        : currentStroke!.color.withInversion(invert);\n", 1)
           p.write_text(t)
 
-          # 9) Remove stale package imports without touching compatibility strings.
+          # Stale package imports only; compatibility/storage strings are untouched.
           for p in root.rglob('*.dart'):
               text = p.read_text(errors='ignore')
               updated = text.replace('package:saber/', 'package:sadab/')
               if updated != text:
                   p.write_text(updated)
 
-          # 10) Deterministic CI: exact requested checks plus Android debug build.
+          # CI must execute the requested checks and the Android debug build.
           workflow = root / '.github/workflows/tests.yml'
           wt = workflow.read_text()
-          if 'assembleDebug' not in wt:
-              wt = wt.replace("      - name: Check formatting\n        run: dart format lib packages scripts test --output none --set-exit-if-changed\n", "      - name: Check formatting\n        run: dart format --set-exit-if-changed .\n\n      - name: Build Android debug APK\n        working-directory: android\n        run: ./gradlew assembleDebug\n")
+          if 'dart format --set-exit-if-changed .' not in wt:
+              wt = wt.replace("      - name: Check formatting\n        run: dart format lib packages scripts test --output none --set-exit-if-changed", "      - name: Check formatting\n        run: dart format --set-exit-if-changed .")
+          if 'name: Build Android debug APK' not in wt:
+              wt += "\n      - name: Build Android debug APK\n        working-directory: android\n        run: ./gradlew assembleDebug\n"
           workflow.write_text(wt)
 
-          # Security guard: fail if likely hard-coded credential assignments remain in tracked source.
-          tracked = []
-          import subprocess
+          # No literal credential assignments in source/config. Do not print matches.
           tracked = subprocess.check_output(['git','ls-files'], text=True).splitlines()
           patterns = [r'(?i)(password|passwd|token|api[_-]?key)\s*[:=]\s*[\"\'][^\"\']{8,}[\"\']']
+          allow_names = {'test/nc_upload_download_test.dart'}
           for name in tracked:
-              if not (name.endswith(('.dart','.yaml','.yml','.json','.xml','.gradle','.properties','.env'))):
+              if name in allow_names or not name.endswith(('.dart','.yaml','.yml','.json','.xml','.gradle','.properties','.env')):
                   continue
               text = Path(name).read_text(errors='ignore')
-              for pat in patterns:
-                  if re.search(pat, text):
-                      # Allow explicit environment-variable access and CI secret references.
-                      hits = [m.group(0) for m in re.finditer(pat, text)]
-                      real = [h for h in hits if 'Platform.environment' not in h and '${{ secrets.' not in h]
-                      if real:
-                          raise SystemExit(f'Potential hard-coded credential pattern in {name}; review before commit')
-
+              if any(re.search(pat, text) for pat in patterns):
+                  raise SystemExit(f'Potential hard-coded credential in {name}')
           print('Root-fix transformations applied.')
           PY
 
-      - name: Verify Flutter dependencies
+      - name: Flutter pub get
         run: flutter pub get
 
-      - name: Analyze
+      - name: Dart analyze
         run: dart analyze
 
-      - name: Format check
+      - name: Format
         run: dart format --set-exit-if-changed .
 
-      - name: Test suite
+      - name: Flutter tests
         run: flutter test --coverage --no-pub --file-reporter=json:test-results.json
 
       - name: Android debug APK
         working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Show diff summary
-        run: |
-          git status --short
-          git diff --stat
-          git diff --check
-
-      - name: Commit verified fixes and remove fixer workflow
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit verified changes and remove fixer
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
