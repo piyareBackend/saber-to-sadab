@@ -12,14 +12,16 @@ jobs:
           python-version: '3.x'
       - name: Apply Sadab suite
         run: |
+          mkdir -p lib/components/shapes
           python3 - <<'PY'
           from pathlib import Path
           p = Path('.github/scripts/apply_sadab.py')
           s = p.read_text()
-          a = s.index('# Compact toolbar button ergonomics.')
-          b = s.index('# New, cache-friendly paper grain renderer.')
-          s = s[:a] + s[b:]
-          p.write_text(s)
+          if '# Compact toolbar button ergonomics.' in s and '# New, cache-friendly paper grain renderer.' in s:
+              a = s.index('# Compact toolbar button ergonomics.')
+              b = s.index('# New, cache-friendly paper grain renderer.')
+              s = s[:a] + s[b:]
+              p.write_text(s)
           PY
           python3 .github/scripts/apply_sadab.py
       - name: Commit Sadab suite
