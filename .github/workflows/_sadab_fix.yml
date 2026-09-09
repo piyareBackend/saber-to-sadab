@@ -41,6 +41,9 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
+      - name: Apply safe analyzer fixes
+        run: dart fix --apply
+
       - name: Dart analyze
         run: dart analyze
 
@@ -58,7 +61,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm -f .github/sadab_root_fix.py .github/sadab_fix2.py .github/sadab_fix3.py .github/workflows/_sadab_fix.yml
+          git rm -f .github/sadab_root_fix.py .github/sadab_fix2.py .github/sadab_fix3.py .github/sadab_fix4.py .github/workflows/_sadab_fix.yml
           git add -A
           git diff --cached --check
           git commit -m 'fix: complete Sadab CI and tablet UX integration'
