@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saber/data/editor/page.dart';
-import 'package:saber/pages/editor/editor.dart';
+import 'package:sadab/data/editor/page.dart';
+import 'package:sadab/pages/editor/editor.dart';
 
 void main() {
   group('getPageIndexFromScrollPosition', () {
@@ -36,7 +36,7 @@ void main() {
     test('returns 0 when scroll position is within first page', () {
       expect(
         EditorState.getPageIndexFromScrollPosition(
-          scrollY: 50, // middle of first page
+          scrollY: 50,
           screenWidth: 100,
           pages: pages,
         ),
@@ -47,7 +47,7 @@ void main() {
     test('returns 1 when scroll position is within second page', () {
       expect(
         EditorState.getPageIndexFromScrollPosition(
-          scrollY: 150, // middle of second page
+          scrollY: 150,
           screenWidth: 100,
           pages: pages,
         ),
@@ -58,7 +58,7 @@ void main() {
     test('returns 2 when scroll position is within third page', () {
       expect(
         EditorState.getPageIndexFromScrollPosition(
-          scrollY: 350, // middle of third page
+          scrollY: 350,
           screenWidth: 100,
           pages: pages,
         ),
